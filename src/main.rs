@@ -30,8 +30,8 @@ fn main() {
             watch_for_changes: true,
             ..default()
         })
-        .add_plugin(LogDiagnosticsPlugin::default())
-        .add_plugin(FrameTimeDiagnosticsPlugin::default())
+//      .add_plugin(LogDiagnosticsPlugin::default())
+//      .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(audio::GameAudioPlugin)
@@ -50,7 +50,7 @@ fn main() {
         .add_plugin(ui::text_size::TextSizePlugin)
         .add_state(AppState::Initial)
         .add_system_set(SystemSet::on_update(AppState::Initial).with_system(bootstrap))
-        .add_system(exit)
+        .add_system(debug)
         .run();
 }
 
@@ -61,6 +61,7 @@ pub enum AppState {
     Debug,
     TitleScreen,
     InGame,
+    ResetInGame,
     Loading,
 }
 
@@ -74,11 +75,41 @@ fn bootstrap(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
 ) {
-    assets_handler.load(AppState::TitleScreen, &mut game_assets);
+    assets_handler.load(AppState::InGame, &mut game_assets);
 }
 
-fn exit(keys: Res<Input<KeyCode>>, mut exit: ResMut<Events<AppExit>>) {
+fn debug(
+    keys: Res<Input<KeyCode>>, 
+    mut exit: ResMut<Events<AppExit>>,
+    mut assets_handler: asset_loading::AssetsHandler,
+    mut game_assets: ResMut<assets::GameAssets>,
+ ) {
     if keys.just_pressed(KeyCode::Q) {
         exit.send(AppExit);
     }
+
+    if keys.just_pressed(KeyCode::R) {
+        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+    }
 }
+
+pub trait ZeroSignum {
+    fn zero_signum(&self) -> Vec3;
+}
+
+impl ZeroSignum for Vec3 {
+    fn zero_signum(&self) -> Vec3 {
+        let convert = |n| {
+            if n < 0.1 && n > -0.1 {
+                0.0
+            } else if n > 0.0 {
+                1.0
+            } else {
+                -1.0
+            }
+        };
+
+        Vec3::new(convert(self.x), convert(self.y), convert(self.z))
+    }
+}
+

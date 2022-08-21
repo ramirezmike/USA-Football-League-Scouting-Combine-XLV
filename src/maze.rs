@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::{
-    AppState, collision::WorldAabb, assets::GameAssets,
+    AppState, collision::WorldAabb, assets::GameAssets, ingame,
 };
 
 #[derive(Component)]
@@ -58,6 +58,7 @@ fn spawn_corn(
                     },
                     ..Default::default()
                 })
+                .insert(ingame::CleanupMarker)
                 .insert(CornStalk {
                     is_harvested: false
                 });

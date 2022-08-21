@@ -1,4 +1,4 @@
-use crate::{collision, maze};
+use crate::{collision, maze, combine};
 use bevy::prelude::*;
 use bevy::render::primitives::Aabb;
 use uuid::Uuid;
@@ -71,6 +71,17 @@ fn add_components(
                 });
 
             println!("found maze");
+            change_name = true;
+        }
+
+        if name.as_str().contains("combine_blade") {
+            let matrix = global_transform.compute_matrix();
+            commands
+                .entity(entity)
+                .insert(combine::CombineBlade);
+            visibility.is_visible = false;
+
+            println!("found combine blade");
             change_name = true;
         }
 

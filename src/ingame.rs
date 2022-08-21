@@ -11,8 +11,15 @@ impl Plugin for InGamePlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_enter(AppState::InGame)
-                .with_system(game_camera::spawn_camera)
                 .with_system(setup),
+        )
+        .add_system_set(
+            SystemSet::on_exit(AppState::InGame)
+                .with_system(cleanup::<CleanupMarker>)
+        )
+        .add_system_set(
+            SystemSet::on_update(AppState::ResetInGame)
+                .with_system(reset_ingame)
         )
         .add_system_set(
             SystemSet::on_update(AppState::InGame)
@@ -21,8 +28,15 @@ impl Plugin for InGamePlugin {
     }
 }
 
-#[derive(Component)]
-struct CleanupMarker;
+#[derive(Component, Copy, Clone)]
+pub struct CleanupMarker;
+
+fn reset_ingame(
+    mut assets_handler: asset_loading::AssetsHandler,
+    mut game_assets: ResMut<GameAssets>,
+) {
+    assets_handler.load(AppState::InGame, &mut game_assets);
+}
 
 pub fn load(
     assets_handler: &mut asset_loading::AssetsHandler,
@@ -31,6 +45,8 @@ pub fn load(
     assets_handler.add_glb(&mut game_assets.person, "models/person.glb");
     assets_handler.add_animation(&mut game_assets.person_idle,"models/person.glb#Animation0");
     assets_handler.add_animation(&mut game_assets.person_run,"models/person.glb#Animation1");
+    assets_handler.add_glb(&mut game_assets.combine, "models/combine.glb");
+    assets_handler.add_animation(&mut game_assets.combine_drive,"models/combine.glb#Animation0");
     assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb");
     assets_handler.add_standard_mesh(&mut game_assets.corn_stalk, Mesh::from(shape::Cube::new(0.1)));
     assets_handler.add_standard_material(&mut game_assets.corn_stalk_material, 
@@ -53,6 +69,8 @@ fn setup(
     mut audio: GameAudio,
 ) {
     println!("Setting up ingame");
+
+    game_camera::spawn_camera(&mut commands, CleanupMarker);
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 0.50,
@@ -64,7 +82,18 @@ fn setup(
                     ..default()
                 })
                 .insert_bundle(player::PlayerBundle::new())
-                .insert(combine::Combine)
+                .insert(AnimationLink {
+                    entity: None
+                })
+                .insert(CleanupMarker);
+    }
+
+    if let Some(gltf) = assets_gltf.get(&game_assets.combine.clone()) {
+        commands.spawn_bundle(SceneBundle {
+                    scene: gltf.scenes[0].clone(),
+                    ..default()
+                })
+                .insert(combine::Combine::default())
                 .insert(AnimationLink {
                     entity: None
                 })

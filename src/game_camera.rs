@@ -131,7 +131,7 @@ fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
     Vec2::new(window.width() as f32, window.height() as f32)
 }
 
-pub fn spawn_camera(mut commands: Commands) {
+pub fn spawn_camera<T: Component + Clone>(commands: &mut Commands, cleanup_marker: T) {
     let translation = Vec3::new(-5.0, 5.0, 0.0);
 
     let radius = translation.length();
@@ -145,7 +145,9 @@ pub fn spawn_camera(mut commands: Commands) {
 //          ..default()
 //      }.into(),
         ..default()
-    }).insert(PanOrbitCamera {
+    })
+    .insert(cleanup_marker.clone())
+    .insert(PanOrbitCamera {
         radius,
         ..Default::default()
     });
@@ -172,6 +174,7 @@ pub fn spawn_camera(mut commands: Commands) {
             ..Default::default()
         },
         ..Default::default()
-    });
+    })
+    .insert(cleanup_marker);
 }
 

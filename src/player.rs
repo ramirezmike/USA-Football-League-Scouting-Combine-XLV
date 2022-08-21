@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink };
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum};
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use rand::Rng;
@@ -15,26 +15,6 @@ impl Plugin for PlayerPlugin {
                     .with_system(handle_input)
                     .with_system(move_player.after(handle_input)),
             );
-    }
-}
-
-pub trait ZeroSignum {
-    fn zero_signum(&self) -> Vec3;
-}
-
-impl ZeroSignum for Vec3 {
-    fn zero_signum(&self) -> Vec3 {
-        let convert = |n| {
-            if n < 0.1 && n > -0.1 {
-                0.0
-            } else if n > 0.0 {
-                1.0
-            } else {
-                -1.0
-            }
-        };
-
-        Vec3::new(convert(self.x), convert(self.y), convert(self.z))
     }
 }
 

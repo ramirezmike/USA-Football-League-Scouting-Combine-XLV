@@ -19,6 +19,8 @@ pub struct GameAssets {
     pub maze: Handle<Gltf>,
     pub corn_stalk: Handle<Mesh>,
     pub corn_stalk_material: Handle<StandardMaterial>,
+    pub combine: Handle<Gltf>,
+    pub combine_drive: Handle<AnimationClip>,
 
     pub blip: Handle<AudioSource>,
     pub titlescreen: Handle<AudioSource>,
