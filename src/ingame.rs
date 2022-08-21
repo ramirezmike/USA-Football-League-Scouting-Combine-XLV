@@ -3,6 +3,7 @@ use crate::{
     game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink,
     combine,
 };
+use std::f32::consts::{TAU, PI};
 use bevy::gltf::Gltf;
 use bevy::prelude::*;
 
@@ -91,6 +92,12 @@ fn setup(
     if let Some(gltf) = assets_gltf.get(&game_assets.combine.clone()) {
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
+                    transform: {
+                        let mut t = Transform::from_xyz(0.0, 0.0, -(game_state.maze_size / 2.0));
+                        t.rotate_y(TAU * 0.75);
+                        t
+                    },
+
                     ..default()
                 })
                 .insert(combine::Combine::default())

@@ -14,14 +14,16 @@ impl Plugin for GameStatePlugin {
 
 pub struct GameState {
     pub score: usize,
-    pub music_on: bool 
+    pub music_on: bool,
+    pub maze_size: f32,
 }
 
 impl GameState {
     pub fn initialize(music_on: bool) -> Self {
         GameState {
             score: 0,
-            music_on: music_on
+            music_on: music_on,
+            maze_size: 30.0,
         }
     }
 }
@@ -31,6 +33,7 @@ impl Default for GameState {
         GameState {
             score: 0,
             music_on: true,
+            maze_size: 30.0,
         }
     }
 }
