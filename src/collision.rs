@@ -18,7 +18,7 @@ pub struct Collidables<'w, 's> {
 }
 
 impl<'w, 's> Collidables<'w, 's> {
-    pub fn fit_in(&self, current: &Vec3, new: &mut Vec3, velocity: &mut Vec3) {
+    pub fn fit_in(&self, current: &Vec3, new: &mut Vec3, velocity: &mut Vec3, time: &Res<Time>) {
         if self.collidables.iter().count() == 0 {
             return;
         }
@@ -42,49 +42,49 @@ impl<'w, 's> Collidables<'w, 's> {
             return;
         }
 
+        let get_sign = |num: f32| {
+            let sign = num.signum();
+            if sign.is_nan() {
+                1.0
+            } else {
+                sign
+            }
+        };
+
         let mut temp_new = *current;
-//      if !current_aabbs.is_empty() {
-//          let aabb = current_aabbs[0];
-//          if temp_new.x > aabb.min.x && temp_new.x < aabb.max.x {
-//              temp_new.x = current.x;
-//          }
+        for aabb in current_aabbs.iter() {
+            let top_normal = (Vec3::new(aabb.max.x, 0.0, aabb.min.z)
+                            - Vec3::new(aabb.max.x, 0.0, aabb.max.z)).cross(Vec3::Y).normalize();
+            let bottom_normal = (Vec3::new(aabb.min.x, 0.0, aabb.max.z)
+                               - Vec3::new(aabb.min.x, 0.0, aabb.min.z)).cross(Vec3::Y).normalize();
+            let left_normal = (Vec3::new(aabb.min.x, 0.0, aabb.min.z)
+                             - Vec3::new(aabb.max.x, 0.0, aabb.min.z)).cross(Vec3::Y).normalize();
+            let right_normal = (Vec3::new(aabb.max.x, 0.0, aabb.max.z)
+                              - Vec3::new(aabb.min.x, 0.0, aabb.max.z)).cross(Vec3::Y).normalize();
 
-//          if temp_new.z > aabb.min.z && temp_new.z < aabb.max.z {
-//              temp_new.z = current.z;
-//          }
-//      } else {
-//          temp_new = *current;
-//      }
-
-//      // All this allows sliding against walls
-//      let x_changed = temp_new.x != new.x;
-//      let z_changed = temp_new.z != new.z;
-//      let get_sign = |num: f32| {
-//          let sign = num.signum();
-//          if sign.is_nan() {
-//              1.0
-//          } else {
-//              sign
-//          }
-//      };
-
-//      match (x_changed, z_changed) {
-//          (true, true) => {
-//              velocity.x = 0.0;
-//              velocity.z = 0.0;
-//          }
-//          (true, false) => {
-//              velocity.z = get_sign(velocity.z) * f32::max(velocity.z.abs(), velocity.x.abs());
-//              velocity.x = 0.0;
-//          }
-//          (false, true) => {
-//              velocity.x = get_sign(velocity.x) * f32::max(velocity.z.abs(), velocity.x.abs());
-//              velocity.z = 0.0;
-//          }
-//          _ => (),
-//      }
-
-        *new = temp_new;
+            let normalized_current = (*new - temp_new).normalize();
+            if top_normal.dot(normalized_current) < 0.0 && temp_new.x > aabb.max.x {
+                let undesired = (velocity.x.abs().max(1.0) * top_normal) * normalized_current.dot(top_normal);
+                *new = temp_new - (undesired * time.delta_seconds());
+                velocity.x = 0.0;
+                velocity.z = velocity.z + (get_sign(velocity.z) * velocity.x);
+            } else if bottom_normal.dot(normalized_current) < 0.0 && temp_new.x < aabb.min.x {
+                let undesired = (velocity.x.abs().max(1.0) * bottom_normal) * normalized_current.dot(bottom_normal);
+                *new = temp_new - (undesired * time.delta_seconds());
+                velocity.x = 0.0;
+                velocity.z = velocity.z + (get_sign(velocity.z) * velocity.x);
+            } else if left_normal.dot(normalized_current) < 0.0 && temp_new.z < aabb.min.z {
+                let undesired = (velocity.z.abs().max(1.0) * left_normal) * normalized_current.dot(left_normal);
+                *new = temp_new - (undesired * time.delta_seconds());
+                velocity.x = velocity.x + (get_sign(velocity.x) * velocity.z);
+                velocity.z = 0.0;
+            } else if right_normal.dot(normalized_current) < 0.0 && temp_new.z > aabb.max.z {
+                let undesired = (velocity.z.abs().max(1.0) * right_normal) * normalized_current.dot(right_normal);
+                *new = temp_new - (undesired * time.delta_seconds());
+                velocity.x = velocity.x + (get_sign(velocity.x) * velocity.z);
+                velocity.z = 0.0;
+            } 
+        }
     }
 }
 

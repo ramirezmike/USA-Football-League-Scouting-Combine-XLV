@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{
     AppState, maze::CornStalk, assets::GameAssets, component_adder::AnimationLink,
-    collision::WorldAabb, game_state, ZeroSignum,
+    collision, game_state, ZeroSignum,
 };
 use bevy::render::primitives::Aabb;
 use rand::thread_rng;
@@ -66,7 +66,8 @@ pub struct CombineBlade;
 
 const CORN_CUT_DISTANCE: f32 = 0.7;
 fn handle_corn_collision( 
-    mut corns: Query<(&mut CornStalk, &mut Transform), Without<Combine>>,
+    mut commands: Commands,
+    mut corns: Query<(Entity, &mut CornStalk, &mut Transform), Without<Combine>>,
     combine_blades: Query<(&Transform, &CombineBlade, &Aabb, &GlobalTransform), Without<CornStalk>>,
 ) {
     for (blade_transform, blade, blade_aabb, blade_global_transform) in &combine_blades {
@@ -75,7 +76,7 @@ fn handle_corn_collision(
         let min: Vec3 = blade_aabb.min().into();
         let max: Vec3 = blade_aabb.max().into();
 
-        for (mut corn, mut corn_transform) in &mut corns {
+        for (entity, mut corn, mut corn_transform) in &mut corns {
             if corn.is_harvested { continue; }
 
             let corn_translation = corn_transform.translation;
@@ -89,6 +90,8 @@ fn handle_corn_collision(
             if corn_in_hitbox {
                 corn_transform.scale.y = 0.1;
                 corn.is_harvested = true;
+                commands.entity(entity)
+                        .remove::<collision::Collidable>();
             }
         }
     }
@@ -171,73 +174,6 @@ fn harvest_corn(
         }
     }
 }
-
-/*
-fn seek_corn(
-    mut combines: Query<(&mut Combine, &mut Transform), Without<CornStalk>>,
-    corns: Query<(&CornStalk, &Transform), Without<Combine>>,
-    game_state: Res<game_state::GameState>,
-    time: Res<Time>,
-) {
-    for (mut combine, mut combine_transform) in &mut combines {
-        if combine.target_corn_stalk.is_none() { continue; }
-        let corn_stalk_entity = combine.target_corn_stalk.expect("missing corn stalk");
-
-        if let Ok((corn_stalk, corn_stalk_transform)) = corns.get(corn_stalk_entity) {
-            if corn_stalk.is_harvested {
-                combine.target_corn_stalk = None;
-                continue;
-            }
-
-            let speed: f32 = combine.speed;
-            let rotation_speed: f32 = combine.rotation_speed;
-            let friction: f32 = combine.friction;
-
-            combine.velocity *= friction.powf(time.delta_seconds());
-
-//          let direction = corn_stalk_transform.translation - 
-//                          (combine_transform.translation + (combine_transform.forward() * 1.1));
-            let direction = combine_transform.forward();
-            let acceleration = Vec3::from(direction);
-            combine.velocity += (acceleration.zero_signum() * speed) * time.delta_seconds();
-
-            let new_translation = combine_transform.translation + (combine.velocity * time.delta_seconds());
-
-//          let angle = (-(new_translation.z - combine_transform.translation.z))
-//              .atan2(new_translation.x - combine_transform.translation.x);
-//          let rotation = Quat::from_axis_angle(Vec3::Y, angle);
-            combine_transform.translation = new_translation;
-//          let new_rotation = combine_transform
-//              .rotation
-//              .lerp(rotation, time.delta_seconds() * rotation_speed);
-//          if !new_rotation.is_nan() && combine.velocity.length() > 0.001 {
-//              combine_transform.rotation = rotation;
-//          }
-        }
-    }
-}
-
-fn target_corn( 
-    mut combines: Query<(&mut Combine, &Transform)>,
-    corns: Query<(Entity, &CornStalk, &Transform)>,
-) {
-    for (mut combine, combine_transform) in &mut combines {
-        if combine.target_corn_stalk.is_some() { continue; }
-
-        let unharvested_corn = corns.iter()
-                                    .filter(|(_, c, _)| !c.is_harvested)
-                                    .collect::<Vec::<_>>();
-        if unharvested_corn.is_empty() {
-            println!("no more corn :(");
-            // end of round?
-            continue;
-        }
-
-        let mut rng = thread_rng();
-        combine.target_corn_stalk = unharvested_corn.choose(&mut rng).map(|(e, _, _)| *e);
-    }
-}
-*/
 
 fn animate_combine(
     mut combines: Query<(&mut Combine, &AnimationLink)>,

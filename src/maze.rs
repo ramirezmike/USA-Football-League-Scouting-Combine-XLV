@@ -1,12 +1,12 @@
 use bevy::prelude::*;
 use crate::{
-    AppState, collision::WorldAabb, assets::GameAssets, ingame,
+    AppState, collision, assets::GameAssets, ingame,
 };
 
 #[derive(Component)]
 pub struct MazeMarker {
     pub spawned: bool,
-    pub aabb: WorldAabb,
+    pub aabb: collision::WorldAabb,
 }
 
 #[derive(Component)]
@@ -44,19 +44,25 @@ fn spawn_corn(
 
         for row in 0..rows {
             for column in 0..columns {
+                let x = maze_plane.aabb.min.x + ((row as f32 + 0.5) * maze_thickness);
+                let z = maze_plane.aabb.min.z + ((column as f32 + 0.5) * maze_thickness);
                 commands.spawn_bundle(PbrBundle {
                     mesh: game_assets.corn_stalk.clone_weak(),
                     material: game_assets.corn_stalk_material.clone_weak(),
                     transform: {
-                        let mut t = Transform::from_xyz(maze_plane.aabb.min.x + ((row as f32 + 0.5) * maze_thickness), 
-                                                        0.0, 
-                                                        maze_plane.aabb.min.z + ((column as f32 + 0.5) * maze_thickness));
+                        let mut t = Transform::from_xyz(x, 0.0, z);
                         t.scale.y = corn_height;
                         t.scale.x = corn_thickness;
                         t.scale.z = corn_thickness;
                         t
                     },
                     ..Default::default()
+                })
+                .insert(collision::Collidable {
+                    aabb: collision::WorldAabb {
+                        min: Vec3::new(x - corn_thickness, 0.0, z - corn_thickness),
+                        max: Vec3::new(x + corn_thickness, 0.0, z + corn_thickness),
+                    },
                 })
                 .insert(ingame::CleanupMarker)
                 .insert(CornStalk {

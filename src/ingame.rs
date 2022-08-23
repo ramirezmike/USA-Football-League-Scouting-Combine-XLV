@@ -1,7 +1,7 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, collision, component_adder, game_camera,
     game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink,
-    combine,
+    combine, enemy,
 };
 use std::f32::consts::{TAU, PI};
 use bevy::gltf::Gltf;
@@ -78,11 +78,53 @@ fn setup(
     });
 
     if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
+        let line_of_sight_id = commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::default())),
+                material: materials.add(StandardMaterial {
+                    unlit: true,
+                    base_color: Color::rgba(0.0, 0.0, 1.0, 0.6),
+                    alpha_mode: AlphaMode::Blend,
+                    ..Default::default()
+                }),
+                transform: Transform::from_scale(Vec3::ZERO),
+                ..Default::default()
+            })
+            .insert(enemy::EnemyLineOfSight { })
+            .id();
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
                     ..default()
                 })
                 .insert_bundle(player::PlayerBundle::new())
+                .insert(AnimationLink {
+                    entity: None
+                })
+                .insert(CleanupMarker);
+    }
+
+    if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
+        let line_of_sight_id = commands
+            .spawn_bundle(PbrBundle {
+                mesh: meshes.add(Mesh::from(shape::Box::default())),
+                material: materials.add(StandardMaterial {
+                    unlit: true,
+                    base_color: Color::rgba(1.0, 0.0, 0.0, 0.6),
+                    alpha_mode: AlphaMode::Blend,
+                    ..Default::default()
+                }),
+                transform: Transform::from_scale(Vec3::ZERO),
+                ..Default::default()
+            })
+            .insert(enemy::EnemyLineOfSight { })
+            .insert(CleanupMarker)
+            .id();
+        commands.spawn_bundle(SceneBundle {
+                    scene: gltf.scenes[0].clone(),
+                    transform: Transform::from_xyz(3.0, 0.0, 2.0),
+                    ..default()
+                })
+                .insert(enemy::Enemy::new(line_of_sight_id))
                 .insert(AnimationLink {
                     entity: None
                 })

@@ -13,6 +13,7 @@ mod collision;
 mod combine;
 mod component_adder;
 mod direction;
+mod enemy;
 mod game_controller;
 mod game_camera;
 mod game_state;
@@ -38,6 +39,7 @@ fn main() {
         .add_plugin(assets::AssetsPlugin)
         .add_plugin(asset_loading::AssetLoadingPlugin)
         .add_plugin(component_adder::ComponentAdderPlugin)
+        .add_plugin(enemy::EnemyPlugin)
         .add_plugin(combine::CombinePlugin)
         .add_plugin(game_state::GameStatePlugin)
 //      .add_plugin(ingame_ui::InGameUIPlugin)

@@ -38,7 +38,6 @@ pub fn move_player(
         let friction: f32 = player.friction;
 
         player.velocity *= friction.powf(time.delta_seconds());
-        let mut yank_strength = 1.0;
         if let Some(move_event) = move_events.get(&entity) {
             match move_event.movement {
                 Movement::Normal(direction) => {
@@ -48,13 +47,14 @@ pub fn move_player(
             }
         }
 
-        player.velocity = player.velocity.clamp_length_max(speed * yank_strength);
+        player.velocity = player.velocity.clamp_length_max(speed);
 
         let mut new_translation = transform.translation + (player.velocity * time.delta_seconds());
         collidables.fit_in(
             &transform.translation,
             &mut new_translation,
             &mut player.velocity,
+            &time
         );
 
         let angle = (-(new_translation.z - transform.translation.z))
