@@ -104,33 +104,33 @@ fn setup(
                 .insert(CleanupMarker);
     }
 
-    if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
-        let line_of_sight_id = commands
-            .spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::default())),
-                material: materials.add(StandardMaterial {
-                    unlit: true,
-                    base_color: Color::rgba(1.0, 0.0, 0.0, 0.6),
-                    alpha_mode: AlphaMode::Blend,
-                    ..Default::default()
-                }),
-                transform: Transform::from_scale(Vec3::ZERO),
-                ..Default::default()
-            })
-            .insert(enemy::EnemyLineOfSight { })
-            .insert(CleanupMarker)
-            .id();
-        commands.spawn_bundle(SceneBundle {
-                    scene: gltf.scenes[0].clone(),
-                    transform: Transform::from_xyz(3.0, 0.0, 2.0),
-                    ..default()
-                })
-                .insert(enemy::Enemy::new(line_of_sight_id))
-                .insert(AnimationLink {
-                    entity: None
-                })
-                .insert(CleanupMarker);
-    }
+//  if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
+//      let line_of_sight_id = commands
+//          .spawn_bundle(PbrBundle {
+//              mesh: meshes.add(Mesh::from(shape::Box::default())),
+//              material: materials.add(StandardMaterial {
+//                  unlit: true,
+//                  base_color: Color::rgba(1.0, 0.0, 0.0, 0.6),
+//                  alpha_mode: AlphaMode::Blend,
+//                  ..Default::default()
+//              }),
+//              transform: Transform::from_scale(Vec3::ZERO),
+//              ..Default::default()
+//          })
+//          .insert(enemy::EnemyLineOfSight { })
+//          .insert(CleanupMarker)
+//          .id();
+//      commands.spawn_bundle(SceneBundle {
+//                  scene: gltf.scenes[0].clone(),
+//                  transform: Transform::from_xyz(3.0, 0.0, 2.0),
+//                  ..default()
+//              })
+//              .insert(enemy::Enemy::new(line_of_sight_id))
+//              .insert(AnimationLink {
+//                  entity: None
+//              })
+//              .insert(CleanupMarker);
+//  }
 
     if let Some(gltf) = assets_gltf.get(&game_assets.combine.clone()) {
         commands.spawn_bundle(SceneBundle {

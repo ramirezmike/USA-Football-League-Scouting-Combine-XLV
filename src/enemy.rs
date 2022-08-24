@@ -11,7 +11,7 @@ impl Plugin for EnemyPlugin {
         app.add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(scale_lines_of_sight)
-                //.with_system(move_enemy.after(scale_lines_of_sight)),
+                .with_system(move_enemy.after(scale_lines_of_sight)),
         );
     }
 }
@@ -25,6 +25,7 @@ pub struct Enemy {
     pub rotation_speed: f32,
     pub friction: f32,
     pub random: f32,
+    pub current_animation: Handle::<AnimationClip>,
 }
 
 impl Enemy {
@@ -39,6 +40,7 @@ impl Enemy {
             rotation_speed: 1.0,
             friction: 0.01,
             random: rng.gen_range(0.5..1.0),
+            current_animation: Handle::<AnimationClip>::default(),
         }
     }
 }
@@ -179,22 +181,24 @@ fn move_enemy(
             enemy_transform.rotate_y(time.delta_seconds());
         }
 
-
         if enemy.velocity.length() > 1.0 {
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
-                if animation.is_paused() {
+                if enemy.current_animation != game_assets.person_run {
                     animation.play(game_assets.person_run.clone_weak()).repeat();
                     animation.resume();
+                    enemy.current_animation = game_assets.person_run.clone_weak();
                 } 
                 animation.set_speed(enemy.velocity.length() / 2.0);
             }
         } else {
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
-                if !animation.is_paused() {
+                if enemy.current_animation != game_assets.person_idle {
                     animation.play(game_assets.person_idle.clone_weak()).repeat();
-                    animation.pause();
+                    animation.resume();
+                    enemy.current_animation = game_assets.person_idle.clone_weak();
+                    animation.set_speed(4.0);
                 } 
             }
         }

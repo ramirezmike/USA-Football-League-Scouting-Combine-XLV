@@ -44,6 +44,13 @@ fn add_components(
 
     for (entity, aabb, global_transform, mut name, mut visibility) in items.iter_mut() {
         let mut change_name = false;
+        if name.as_str().contains("dynamic_collide") {
+            commands
+                .entity(entity)
+                .insert(collision::DynamicCollidable);
+
+            change_name = true;
+        }
         if name.as_str().contains("collidable") {
             let matrix = global_transform.compute_matrix();
             commands

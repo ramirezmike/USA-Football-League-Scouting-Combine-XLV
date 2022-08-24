@@ -1,4 +1,5 @@
 use bevy::ecs::system::SystemParam;
+use bevy::render::primitives::Aabb;
 use bevy::prelude::*;
 
 #[derive(Component)]
@@ -6,7 +7,10 @@ pub struct Collidable {
     pub aabb: WorldAabb,
 }
 
-#[derive(Debug, Default)]
+#[derive(Component)]
+pub struct DynamicCollidable;
+
+#[derive(Debug, Default, Copy, Clone)]
 pub struct WorldAabb {
     pub min: Vec3,
     pub max: Vec3,
@@ -15,26 +19,51 @@ pub struct WorldAabb {
 #[derive(SystemParam)]
 pub struct Collidables<'w, 's> {
     collidables: Query<'w, 's, &'static Collidable>,
+    dynamic_collidables: Query<'w, 's, (Entity, &'static DynamicCollidable)>,
+    aabbs: Query<'w, 's, (&'static Aabb, &'static GlobalTransform)>,
 }
 
 impl<'w, 's> Collidables<'w, 's> {
     pub fn fit_in(&self, current: &Vec3, new: &mut Vec3, velocity: &mut Vec3, time: &Res<Time>) {
-        if self.collidables.iter().count() == 0 {
+        if self.collidables.iter().count() == 0 && self.dynamic_collidables.iter().count() == 0 {
             return;
         }
 
         let mut is_valid = true;
         let mut current_aabbs = vec![];
-        for collidable in self.collidables.iter() {
-            let aabb = &collidable.aabb;
 
-            if new.x <= aabb.max.x
-                && new.x >= aabb.min.x
-                && new.z <= aabb.max.z
-                && new.z >= aabb.min.z
+        for collidable in self.collidables.iter() {
+            if new.x <= collidable.aabb.max.x
+                && new.x >= collidable.aabb.min.x
+                && new.z <= collidable.aabb.max.z
+                && new.z >= collidable.aabb.min.z
             {
                 is_valid = false;
-                current_aabbs.push(aabb);
+                current_aabbs.push(collidable.aabb);
+            }
+        }
+
+        let dynamic_collidables = self.dynamic_collidables
+                                      .iter()
+                                      .filter_map(|(entity, _)| self.aabbs.get(entity).ok());
+
+        for (aabb, global_transform) in dynamic_collidables {
+            let matrix = global_transform.compute_matrix();
+            let inverse_matrix = matrix.inverse();
+            let min = aabb.min();
+            let max = aabb.max();
+
+            let transformed_new = inverse_matrix.transform_point3(*new);
+
+            if transformed_new.x <= max.x
+                && transformed_new.x >= min.x
+                && transformed_new.z <= max.z
+                && transformed_new.z >= min.z
+            {
+                // bounce away I guess
+                *new = *current;
+                *velocity = Vec3::new(-velocity.x, -velocity.y, -velocity.z) * 2.0;
+                return; 
             }
         }
 

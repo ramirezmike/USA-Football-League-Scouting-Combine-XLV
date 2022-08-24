@@ -63,15 +63,6 @@ pub fn move_player(
         transform.translation = new_translation;
 
         if player.velocity.length() > 1.0 {
-            let bobbing_velocity = (time.seconds_since_startup() as f32
-                * (2.0 * std::f32::consts::PI)
-                * 4.0
-                * player.random)
-                .sin() as f32;
-            transform.translation.y += bobbing_velocity * (time.delta_seconds() * 4.0);
-        //          transform.rotate(Quat::from_rotation_x(
-        //              bobbing_velocity * (time.delta_seconds() * 8.0),
-        //          ));
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
                 if player.current_animation != game_assets.person_run {
@@ -82,7 +73,6 @@ pub fn move_player(
                 animation.set_speed(player.velocity.length() / 2.0);
             }
         } else {
-            transform.translation.y += -4.0 * time.delta_seconds(); // gravity
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
                 if player.current_animation != game_assets.person_idle {
@@ -93,7 +83,6 @@ pub fn move_player(
                 } 
             }
         }
-        transform.translation.y = transform.translation.y.clamp(0.0, 0.5);
 
         let new_rotation = transform
             .rotation
@@ -102,18 +91,6 @@ pub fn move_player(
         // don't rotate if we're not moving or if uhh rotation isnt a number?? why isn't it a number? who did this
         if !new_rotation.is_nan() && player.velocity.length() > 0.5 {
             transform.rotation = rotation;
-        }
-
-        // make the player all squishy like
-        if transform.scale.x != 1.0 || transform.scale.y != 1.0 {
-            let new_scale = transform
-                .scale
-                .lerp(Vec3::new(1.0, 1.0, 1.0), time.delta_seconds() * 4.0);
-            if new_scale.is_nan() || transform.scale.distance(new_scale) < 0.0001 {
-                transform.scale = Vec3::new(1.0, 1.0, 1.0);
-            } else {
-                transform.scale = new_scale;
-            }
         }
     }
 }
