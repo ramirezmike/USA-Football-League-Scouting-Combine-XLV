@@ -11,7 +11,7 @@ impl Plugin for EnemyPlugin {
         app.add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(scale_lines_of_sight)
-                .with_system(move_enemy.after(scale_lines_of_sight)),
+                //.with_system(move_enemy.after(scale_lines_of_sight)),
         );
     }
 }
@@ -133,12 +133,14 @@ fn scale_lines_of_sight(
 }
 
 fn move_enemy(
-    mut enemies: Query<(&mut Enemy, &mut Transform)>,
+    mut enemies: Query<(&mut Enemy, &mut Transform, &AnimationLink)>,
+    mut animations: Query<&mut AnimationPlayer>,
     player: Query<&Transform, (With<player::Player>, Without<Enemy>)>,
     collidables: collision::Collidables,
     time: Res<Time>,
+    game_assets: ResMut<GameAssets>,
 ) {
-    for (mut enemy, mut enemy_transform) in &mut enemies {
+    for (mut enemy, mut enemy_transform, animation_link) in &mut enemies {
         let speed: f32 = enemy.speed;
         let rotation_speed: f32 = enemy.rotation_speed;
         let friction: f32 = enemy.friction;
@@ -177,5 +179,24 @@ fn move_enemy(
             enemy_transform.rotate_y(time.delta_seconds());
         }
 
+
+        if enemy.velocity.length() > 1.0 {
+            if let Some(animation_entity) = animation_link.entity {
+                let mut animation = animations.get_mut(animation_entity).unwrap();
+                if animation.is_paused() {
+                    animation.play(game_assets.person_run.clone_weak()).repeat();
+                    animation.resume();
+                } 
+                animation.set_speed(enemy.velocity.length() / 2.0);
+            }
+        } else {
+            if let Some(animation_entity) = animation_link.entity {
+                let mut animation = animations.get_mut(animation_entity).unwrap();
+                if !animation.is_paused() {
+                    animation.play(game_assets.person_idle.clone_weak()).repeat();
+                    animation.pause();
+                } 
+            }
+        }
     }
 }

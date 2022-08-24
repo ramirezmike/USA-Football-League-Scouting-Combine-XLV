@@ -15,7 +15,7 @@ impl Plugin for ComponentAdderPlugin {
 #[derive(Default)]
 pub struct ComponentAdder {
     has_added: bool,
-    has_linked: bool,
+    pub has_linked: bool,
     frame_cooldown: usize,
 }
 

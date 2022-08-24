@@ -129,6 +129,7 @@ fn harvest_corn(
                             0.0
                         };
 
+                    combine.velocity.z = 0.0;
                     if combine.target_x_coordinate > combine_transform.translation.x {
                         combine.target_rotation = Quat::from_rotation_y(0.0);
                         combine.heading = Heading::Up;
@@ -142,6 +143,7 @@ fn harvest_corn(
                 if (combine_transform.translation.x - combine.target_x_coordinate).abs() < 0.1 {
                     combine.heading = if combine_transform.translation.z > 0.0 { Heading::Left } else { Heading::Right };
                     combine.current_rotation_time = 0.0;
+                    combine.velocity.x = 0.0;
                     combine.target_rotation = match combine.heading {
                         Heading::Left => Quat::from_rotation_y(TAU * 0.25),
                         Heading::Right => Quat::from_rotation_y(TAU * 0.75),

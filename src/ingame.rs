@@ -49,7 +49,8 @@ pub fn load(
     assets_handler.add_glb(&mut game_assets.combine, "models/combine.glb");
     assets_handler.add_animation(&mut game_assets.combine_drive,"models/combine.glb#Animation0");
     assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb");
-    assets_handler.add_standard_mesh(&mut game_assets.corn_stalk, Mesh::from(shape::Cube::new(0.1)));
+    assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn.glb");
+    assets_handler.add_animation(&mut game_assets.corn_sway,"models/corn.glb#Animation0");
     assets_handler.add_standard_material(&mut game_assets.corn_stalk_material, 
                                          StandardMaterial {
                                              unlit: true,

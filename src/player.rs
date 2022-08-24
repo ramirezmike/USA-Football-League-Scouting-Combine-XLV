@@ -74,19 +74,22 @@ pub fn move_player(
         //          ));
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
-                if animation.is_paused() {
+                if player.current_animation != game_assets.person_run {
                     animation.play(game_assets.person_run.clone_weak()).repeat();
                     animation.resume();
-                } 
+                    player.current_animation = game_assets.person_run.clone_weak();
+                }
                 animation.set_speed(player.velocity.length() / 2.0);
             }
         } else {
             transform.translation.y += -4.0 * time.delta_seconds(); // gravity
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
-                if !animation.is_paused() {
+                if player.current_animation != game_assets.person_idle {
                     animation.play(game_assets.person_idle.clone_weak()).repeat();
-                    animation.pause();
+                    animation.resume();
+                    player.current_animation = game_assets.person_idle.clone_weak();
+                    animation.set_speed(4.0);
                 } 
             }
         }
@@ -161,6 +164,7 @@ pub struct Player {
     pub rotation_speed: f32,
     pub friction: f32,
     pub random: f32,
+    pub current_animation: Handle<AnimationClip>,
 }
 
 impl Player {
@@ -173,6 +177,7 @@ impl Player {
             rotation_speed: 1.0,
             friction: 0.01,
             random: rng.gen_range(0.5..1.0),
+            current_animation: Handle::<AnimationClip>::default(),
         }
     }
 }
