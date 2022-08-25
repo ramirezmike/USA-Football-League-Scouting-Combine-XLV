@@ -89,9 +89,10 @@ fn handle_corn_collision(
 
             if corn_in_hitbox {
                 corn_transform.scale.y = 0.1;
-                corn.is_harvested = true;
-                commands.entity(entity)
-                        .remove::<collision::Collidable>();
+//              corn.is_harvested = true;
+//              commands.entity(entity)
+//                      .remove::<collision::Collidable>();
+                commands.entity(entity).despawn_recursive();
             }
         }
     }

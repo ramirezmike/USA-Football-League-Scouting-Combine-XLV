@@ -1,6 +1,9 @@
 use bevy::ecs::system::SystemParam;
 use bevy::render::primitives::Aabb;
 use bevy::prelude::*;
+use crate::{
+    LEFT_END, RIGHT_END, BOTTOM_END, TOP_END,
+};
 
 #[derive(Component)]
 pub struct Collidable {
@@ -27,6 +30,27 @@ impl<'w, 's> Collidables<'w, 's> {
     pub fn fit_in(&self, current: &Vec3, new: &mut Vec3, velocity: &mut Vec3, time: &Res<Time>) {
         if self.collidables.iter().count() == 0 && self.dynamic_collidables.iter().count() == 0 {
             return;
+        }
+
+        if new.z <= LEFT_END {
+            *new = *current;
+            *velocity = Vec3::new(velocity.x, velocity.y, velocity.z.abs().max(1.0) * 2.0);
+            return; 
+        }
+        if new.z >= RIGHT_END {
+            *new = *current;
+            *velocity = Vec3::new(velocity.x, velocity.y, (velocity.z.abs() * -1.0).min(-1.0) * 2.0);
+            return; 
+        }
+        if new.x <= BOTTOM_END {
+            *new = *current;
+            *velocity = Vec3::new(velocity.x.abs().max(1.0) * 2.0, velocity.y, velocity.z);
+            return; 
+        }
+        if new.x >= TOP_END {
+            *new = *current;
+            *velocity = Vec3::new((velocity.x.abs() * -1.0).min(-1.0) * 2.0, velocity.y, velocity.z);
+            return; 
         }
 
         let mut is_valid = true;
@@ -114,6 +138,7 @@ impl<'w, 's> Collidables<'w, 's> {
                 velocity.z = 0.0;
             } 
         }
+
     }
 }
 

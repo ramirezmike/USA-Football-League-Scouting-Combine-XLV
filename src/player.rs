@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football};
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use rand::Rng;
@@ -13,8 +13,31 @@ impl Plugin for PlayerPlugin {
                 SystemSet::on_update(AppState::InGame)
                     .with_system(handle_controllers.before(handle_input))
                     .with_system(handle_input)
+                    .with_system(check_for_touchdown)
                     .with_system(move_player.after(handle_input)),
             );
+    }
+}
+
+pub fn check_for_touchdown(
+    mut players: Query<(Entity, &Transform, &mut Player)>,
+    game_state: Res<game_state::GameState>,
+    mut touchdown_event_writer: EventWriter<game_state::TouchdownEvent>,
+    mut carried_footballs: Query<(&football::CarriedFootball, &mut Visibility, &Parent)>,
+) {
+    for (player_entity, player_transform, mut player) in &mut players {
+        if player.has_football 
+        && ((game_state.touchdown_on_leftside && player_transform.translation.z <= LEFT_GOAL) 
+         || (!game_state.touchdown_on_leftside && player_transform.translation.z >= RIGHT_GOAL)) {
+            player.has_football = false;
+            touchdown_event_writer.send(game_state::TouchdownEvent);
+            println!("Sending touch");
+            for (_, mut visibility, parent) in &mut carried_footballs {
+                if player_entity == parent.get() {
+                    visibility.is_visible = false;
+                }
+            }
+        }
     }
 }
 
@@ -142,6 +165,7 @@ pub struct Player {
     pub friction: f32,
     pub random: f32,
     pub current_animation: Handle<AnimationClip>,
+    pub has_football: bool,
 }
 
 impl Player {
@@ -155,6 +179,7 @@ impl Player {
             friction: 0.01,
             random: rng.gen_range(0.5..1.0),
             current_animation: Handle::<AnimationClip>::default(),
+            has_football: false,
         }
     }
 }

@@ -17,6 +17,7 @@ pub struct GameAssets {
     pub person_run: Handle<AnimationClip>,
     pub person_idle: Handle<AnimationClip>,
     pub maze: Handle<Gltf>,
+    pub football: Handle<Gltf>,
     pub corn_stalk: Handle<Gltf>,
     pub corn_stalk_material: Handle<StandardMaterial>,
     pub corn_sway: Handle<AnimationClip>,

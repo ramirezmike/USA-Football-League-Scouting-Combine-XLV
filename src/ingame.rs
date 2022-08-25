@@ -1,7 +1,7 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, collision, component_adder, game_camera,
     game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink,
-    combine, enemy,
+    combine, enemy, football,
 };
 use std::f32::consts::{TAU, PI};
 use bevy::gltf::Gltf;
@@ -24,7 +24,8 @@ impl Plugin for InGamePlugin {
         )
         .add_system_set(
             SystemSet::on_update(AppState::InGame)
-                .with_system(game_camera::pan_orbit_camera),
+                .with_system(game_camera::follow_player)
+//                .with_system(game_camera::pan_orbit_camera),
         );
     }
 }
@@ -50,6 +51,7 @@ pub fn load(
     assets_handler.add_animation(&mut game_assets.combine_drive,"models/combine.glb#Animation0");
     assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb");
     assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn.glb");
+    assets_handler.add_glb(&mut game_assets.football, "models/football.glb");
     assets_handler.add_animation(&mut game_assets.corn_sway,"models/corn.glb#Animation0");
     assets_handler.add_standard_material(&mut game_assets.corn_stalk_material, 
                                          StandardMaterial {
@@ -79,20 +81,6 @@ fn setup(
     });
 
     if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
-        let line_of_sight_id = commands
-            .spawn_bundle(PbrBundle {
-                mesh: meshes.add(Mesh::from(shape::Box::default())),
-                material: materials.add(StandardMaterial {
-                    unlit: true,
-                    base_color: Color::rgba(0.0, 0.0, 1.0, 0.6),
-                    alpha_mode: AlphaMode::Blend,
-                    ..Default::default()
-                }),
-                transform: Transform::from_scale(Vec3::ZERO),
-                ..Default::default()
-            })
-            .insert(enemy::EnemyLineOfSight { })
-            .id();
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
                     ..default()
@@ -100,6 +88,24 @@ fn setup(
                 .insert_bundle(player::PlayerBundle::new())
                 .insert(AnimationLink {
                     entity: None
+                })
+                .with_children(|parent| {
+                    if let Some(football_gltf) = assets_gltf.get(&game_assets.football.clone()) {
+                        parent.spawn_bundle(SceneBundle {
+                                  scene: football_gltf.scenes[0].clone(),
+                                  transform: {
+                                      let mut t = Transform::from_scale(Vec3::splat(2.5));
+                                      t.translation.y += 1.0;
+                                      t.translation.x += 0.5;
+                                      t.rotation = Quat::from_rotation_z(TAU * 0.75);
+
+                                      t
+                                  },
+                                  visibility: Visibility { is_visible: false },
+                                  ..default()
+                              })
+                              .insert(football::CarriedFootball);
+                    }
                 })
                 .insert(CleanupMarker);
     }

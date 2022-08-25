@@ -1,6 +1,7 @@
 use crate::{player};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
+use std::f32::consts::{TAU, PI};
 use bevy::render::camera::{PerspectiveProjection, ScalingMode};
 
 #[derive(Component)]
@@ -21,13 +22,18 @@ impl Default for PanOrbitCamera {
 }
 
 pub fn follow_player(
-    mut cameras: Query<&mut Transform, (With<PanOrbitCamera>, Without<player::Player>)>,
-    players: Query<&Transform, With<player::Player>>,
+    mut cameras: Query<&mut Transform, With<PanOrbitCamera>>,
+    players: Query<&Transform, (With<player::Player>, Without<PanOrbitCamera>)>,
+    time: Res<Time>,
 ) {
+    let camera_speed = 1.2;
     for mut camera_transform in cameras.iter_mut() {
         for player_transform in players.iter() {
-            camera_transform.translation.x = player_transform.translation.x - 5.0;
-            camera_transform.translation.z = player_transform.translation.z + 5.0;
+            camera_transform.translation.z += 
+                (player_transform.translation.z - camera_transform.translation.z)
+                * camera_speed
+                * time.delta_seconds();
+
         }
     }
 }
@@ -137,7 +143,11 @@ pub fn spawn_camera<T: Component + Clone>(commands: &mut Commands, cleanup_marke
     let radius = translation.length();
     println!("Spawning camera");
     commands.spawn_bundle(Camera3dBundle {
-        transform: Transform::from_xyz(-18.0, 16.0, -0.2).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: {
+            let mut t = Transform::from_xyz(-29.1, 16.0, 0.0);
+            t.rotation = Quat::from_axis_angle(Vec3::new(-0.31264523, -0.8969426, -0.3126451), 1.6793457);  
+            t
+        },
 //      projection: OrthographicProjection {
 //          scale: 10.0,
 //          scaling_mode: ScalingMode::FixedVertical(1.0),

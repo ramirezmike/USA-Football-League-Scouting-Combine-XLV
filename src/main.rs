@@ -14,6 +14,7 @@ mod combine;
 mod component_adder;
 mod direction;
 mod enemy;
+mod football;
 mod game_controller;
 mod game_camera;
 mod game_state;
@@ -24,6 +25,14 @@ mod player;
 mod title_screen;
 mod shaders;
 mod ui;
+
+const LEFT_GOAL:f32 = -38.5;
+const RIGHT_GOAL:f32 = 37.5;
+const LEFT_END:f32 = -47.5;
+const RIGHT_END:f32 = 47.0;
+const BOTTOM_END:f32 = -19.471;
+const TOP_END:f32 = 20.471;
+
 
 fn main() {
     App::new()
@@ -40,6 +49,7 @@ fn main() {
         .add_plugin(asset_loading::AssetLoadingPlugin)
         .add_plugin(component_adder::ComponentAdderPlugin)
         .add_plugin(enemy::EnemyPlugin)
+        .add_plugin(football::FootballPlugin)
         .add_plugin(combine::CombinePlugin)
         .add_plugin(game_state::GameStatePlugin)
 //      .add_plugin(ingame_ui::InGameUIPlugin)
@@ -85,6 +95,7 @@ fn debug(
     mut exit: ResMut<Events<AppExit>>,
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
+    mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
  ) {
     if keys.just_pressed(KeyCode::Q) {
         exit.send(AppExit);
@@ -92,6 +103,10 @@ fn debug(
 
     if keys.just_pressed(KeyCode::R) {
         assets_handler.load(AppState::ResetInGame, &mut game_assets);
+    }
+
+    if keys.just_pressed(KeyCode::F) {
+        football_launch_event_writer.send(football::LaunchFootballEvent);
     }
 }
 
