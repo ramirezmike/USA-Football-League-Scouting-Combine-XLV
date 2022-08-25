@@ -65,13 +65,19 @@ pub fn move_player(
             match move_event.movement {
                 Movement::Normal(direction) => {
                     let acceleration = Vec3::from(direction);
+                    let speed = speed *
+                               if game_state.attached_enemies > 0 {
+                               // slow down player for each enemy attached
+                                (0.8 * game_state.attached_enemies as f32)
+                               } else {
+                                   1.0
+                               };
                     player.velocity += (acceleration.zero_signum() * speed) * time.delta_seconds();
                 }
             }
         }
 
         player.velocity = player.velocity.clamp_length_max(speed);
-
         let mut new_translation = transform.translation + (player.velocity * time.delta_seconds());
         collidables.fit_in(
             &transform.translation,

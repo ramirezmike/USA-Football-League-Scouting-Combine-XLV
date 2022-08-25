@@ -1,5 +1,5 @@
 [package]
-name = "bevy_jam_02"
+name = "football_combine"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"

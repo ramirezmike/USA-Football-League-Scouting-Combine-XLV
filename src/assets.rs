@@ -14,6 +14,7 @@ impl Plugin for AssetsPlugin {
 pub struct GameAssets {
     pub font: Handle<Font>,
     pub person: Handle<Gltf>,
+    pub person_dive: Handle<AnimationClip>,
     pub person_run: Handle<AnimationClip>,
     pub person_idle: Handle<AnimationClip>,
     pub maze: Handle<Gltf>,

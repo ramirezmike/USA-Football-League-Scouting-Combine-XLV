@@ -19,6 +19,7 @@ pub struct GameState {
     pub music_on: bool,
     pub maze_size: f32,
     pub touchdown_on_leftside: bool,
+    pub attached_enemies: usize,
 }
 
 impl GameState {
@@ -26,6 +27,7 @@ impl GameState {
         GameState {
             score: 0,
             music_on: music_on,
+            attached_enemies: 0, 
             maze_size: 30.0,
             touchdown_on_leftside: false,
         }
@@ -37,6 +39,7 @@ impl Default for GameState {
         GameState {
             score: 0,
             music_on: true,
+            attached_enemies: 0, 
             maze_size: 30.0,
             touchdown_on_leftside: false,
         }

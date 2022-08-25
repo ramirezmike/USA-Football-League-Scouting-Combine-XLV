@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use rand::Rng;
 use std::collections::HashMap;
 use bevy::render::primitives::Aabb;
-use std::f32::consts::{FRAC_PI_2};
+use std::f32::consts::{FRAC_PI_2, TAU};
 
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
@@ -22,7 +22,10 @@ pub struct Enemy {
     pub can_see_player: bool,
     pub velocity: Vec3,
     pub speed: f32,
+    pub patrol_time: f32,
     pub rotation_speed: f32,
+    pub has_dived: bool,
+    pub is_attached: bool,
     pub friction: f32,
     pub random: f32,
     pub current_animation: Handle::<AnimationClip>,
@@ -39,6 +42,9 @@ impl Enemy {
             speed: 30.0,
             rotation_speed: 1.0,
             friction: 0.01,
+            patrol_time: 0.0,
+            has_dived: false,
+            is_attached: false,
             random: rng.gen_range(0.5..1.0),
             current_animation: Handle::<AnimationClip>::default(),
         }
@@ -139,23 +145,47 @@ fn move_enemy(
     mut animations: Query<&mut AnimationPlayer>,
     player: Query<&Transform, (With<player::Player>, Without<Enemy>)>,
     collidables: collision::Collidables,
+    mut game_state: ResMut<game_state::GameState>, 
     time: Res<Time>,
     game_assets: ResMut<GameAssets>,
 ) {
     for (mut enemy, mut enemy_transform, animation_link) in &mut enemies {
         let speed: f32 = enemy.speed;
         let rotation_speed: f32 = enemy.rotation_speed;
-        let friction: f32 = enemy.friction;
+        let friction: f32 = enemy.friction + if enemy.has_dived { 0.1 } else { 0.0 };
 
         enemy.velocity *= friction.powf(time.delta_seconds());
 
-        if enemy.can_see_player {
-            let player = player.single();
+        let player = player.single();
+        if enemy.has_dived && player.translation.distance(enemy_transform.translation) < 0.5 {
+            enemy.is_attached = true;
+            enemy.has_dived = false;
+            game_state.attached_enemies += 1;
+        }
+
+        if enemy.is_attached {
+            enemy_transform.translation = player.translation;
+            enemy_transform.rotation = enemy_transform.rotation.lerp(player.rotation, enemy.random);
+            continue;
+        }
+
+        if enemy.can_see_player && !enemy.has_dived {
             let direction = player.translation - enemy_transform.translation;
             let acceleration = Vec3::from(direction);
 
             enemy.velocity += (acceleration.zero_signum() * speed) * time.delta_seconds();
             enemy.velocity = enemy.velocity.clamp_length_max(speed);
+
+            if player.translation.distance(enemy_transform.translation) < 3.0 {
+                enemy.has_dived = true;
+                if let Some(animation_entity) = animation_link.entity {
+                    let mut animation = animations.get_mut(animation_entity).unwrap();
+                    animation.play(game_assets.person_dive.clone_weak());
+                    enemy.current_animation = game_assets.person_dive.clone_weak();
+                    animation.set_speed(enemy.velocity.length() / 2.0);
+                }
+                enemy.velocity = enemy.velocity.normalize() * 0.5 * speed;
+            }
         }
 
         let mut new_translation = enemy_transform.translation + (enemy.velocity * time.delta_seconds());
@@ -168,8 +198,13 @@ fn move_enemy(
 
         enemy_transform.translation = new_translation;
 
+        if enemy.has_dived && enemy.velocity.length() >= 0.001 {
+            continue;
+        } else {
+            enemy.has_dived = false;
+        }
+
         if enemy.can_see_player {
-            let player = player.single();
             let angle = (-(player.translation.z - enemy_transform.translation.z))
                 .atan2(player.translation.x - enemy_transform.translation.x);
             let rotation = Quat::from_axis_angle(Vec3::Y, angle);
@@ -178,8 +213,29 @@ fn move_enemy(
                 enemy_transform.rotation = rotation;
             }
         } else {
-            enemy_transform.rotate_y(time.delta_seconds());
+            enemy.patrol_time -= time.delta_seconds();
+
+            if enemy.patrol_time <= 0.0 {
+                if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.0) {
+                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.25);
+                    enemy_transform.translation.y += 0.01;
+                } else if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.25) {
+                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.50);
+                    enemy_transform.translation.x += 0.01;
+                } else if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.50){
+                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.75);
+                    enemy_transform.translation.y -= 0.01;
+                } else {
+                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.0);
+                    enemy_transform.translation.x -= 0.01;
+                }
+
+                enemy.patrol_time = 3.0 + enemy.random;
+            }
+            enemy.patrol_time = enemy.patrol_time.clamp(0.0, 10.0);
         }
+
+        if enemy.has_dived { continue; };
 
         if enemy.velocity.length() > 1.0 {
             if let Some(animation_entity) = animation_link.entity {
