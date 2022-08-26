@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, maze, player};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, maze, player, LEFT_GOAL, RIGHT_GOAL, TOP_END, BOTTOM_END};
 use bevy::prelude::*;
 use rand::Rng;
 use std::collections::HashMap;
@@ -11,8 +11,11 @@ impl Plugin for EnemyPlugin {
         app.add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(scale_lines_of_sight)
+                .with_system(handle_flying_enemies)
+                .with_system(handle_enemy_blade_event)
                 .with_system(move_enemy.after(scale_lines_of_sight)),
-        );
+        )
+        .add_event::<EnemyBladeEvent>();
     }
 }
 
@@ -26,9 +29,13 @@ pub struct Enemy {
     pub rotation_speed: f32,
     pub has_dived: bool,
     pub is_attached: bool,
+    pub is_launched: bool,
     pub friction: f32,
     pub random: f32,
     pub current_animation: Handle::<AnimationClip>,
+    pub landing_target: Vec3,
+    pub launch_starting_position: Vec3,
+    pub current_flying_time: f32,
 }
 
 impl Enemy {
@@ -47,6 +54,10 @@ impl Enemy {
             is_attached: false,
             random: rng.gen_range(0.5..1.0),
             current_animation: Handle::<AnimationClip>::default(),
+            is_launched: false,
+            landing_target: Vec3::default(),
+            launch_starting_position: Vec3::default(),
+            current_flying_time: 0.0,
         }
     }
 }
@@ -54,6 +65,84 @@ impl Enemy {
 #[derive(Component)]
 pub struct EnemyLineOfSight;
 
+pub struct EnemyBladeEvent {
+    pub entity: Entity
+}
+
+pub fn handle_flying_enemies(
+    mut enemies: Query<(&mut Enemy, &mut Transform)>,
+    time: Res<Time>,
+) {
+    let flight_time = 2.0;
+    let flight_height = 20.0;
+
+    for (mut enemy, mut transform) in &mut enemies {
+        if enemy.is_launched {
+            let (target_with_height, start_with_height) 
+                = if enemy.current_flying_time / flight_time <= 0.5 {
+                     (Vec3::new(enemy.landing_target.x, flight_height, enemy.landing_target.z),
+                     enemy.launch_starting_position)
+                  } else {
+                     (enemy.landing_target,
+                     (Vec3::new(enemy.launch_starting_position.x, flight_height, enemy.launch_starting_position.z)))
+                  };
+            transform.translation = 
+                start_with_height.lerp(target_with_height, enemy.current_flying_time / flight_time);
+            transform.rotate_x(time.delta_seconds());
+            transform.rotate_y(time.delta_seconds() / 2.0);
+            transform.rotate_z(time.delta_seconds() / 3.0);
+            enemy.current_flying_time += time.delta_seconds();
+
+            if enemy.current_flying_time >= flight_time {
+                enemy.current_flying_time = 0.0;
+                enemy.is_launched = false;
+                transform.translation.y = 0.0;
+                transform.rotation = Quat::IDENTITY;
+            }
+        }
+    }
+}
+
+pub fn handle_enemy_blade_event(
+    mut enemy_blade_event_reader: EventReader<EnemyBladeEvent>,
+    mut enemies: Query<(&mut Enemy, &Transform, &AnimationLink)>,
+    mut animations: Query<&mut AnimationPlayer>,
+    game_assets: ResMut<GameAssets>,
+    collidables: collision::Collidables,
+) {
+    for event in enemy_blade_event_reader.iter() {
+        if let Ok((mut enemy, transform, animation_link)) = enemies.get_mut(event.entity) {
+            if let Some(animation_entity) = animation_link.entity {
+                let mut animation = animations.get_mut(animation_entity).unwrap();
+                animation.play(game_assets.person_dive.clone_weak());
+                enemy.current_animation = game_assets.person_dive.clone_weak();
+                animation.set_speed(8.0);
+            }
+
+            let mut target = None;
+            let mut rng = rand::thread_rng();
+            let z_buffer = ((RIGHT_GOAL - LEFT_GOAL).abs() * 0.25);
+            let x_buffer = ((TOP_END - BOTTOM_END).abs() * 0.02);
+            let min_z = LEFT_GOAL + z_buffer;
+            let max_z = RIGHT_GOAL - z_buffer;
+            let min_x = BOTTOM_END + x_buffer;
+            let max_x = TOP_END - x_buffer;
+            while target.is_none() {
+                let potential_position = Vec3::new(rng.gen_range(min_x..max_x), 
+                                                   0.0, 
+                                                   rng.gen_range(min_z..max_z));
+                if !collidables.is_in_collidable(&potential_position) {
+                    target = Some(potential_position);
+                }
+            }
+
+            enemy.landing_target = target.unwrap();
+            enemy.launch_starting_position = transform.translation;
+            enemy.current_flying_time = 0.0;
+            enemy.is_launched = true;
+        }
+    }
+}
 
 fn scale_lines_of_sight(
     mut enemies: Query<(&mut Enemy, &Transform), Without<EnemyLineOfSight>>,
@@ -150,6 +239,8 @@ fn move_enemy(
     game_assets: ResMut<GameAssets>,
 ) {
     for (mut enemy, mut enemy_transform, animation_link) in &mut enemies {
+        if enemy.is_launched { continue; }
+
         let speed: f32 = enemy.speed;
         let rotation_speed: f32 = enemy.rotation_speed;
         let friction: f32 = enemy.friction + if enemy.has_dived { 0.1 } else { 0.0 };
@@ -157,7 +248,7 @@ fn move_enemy(
         enemy.velocity *= friction.powf(time.delta_seconds());
 
         let player = player.single();
-        if enemy.has_dived && player.translation.distance(enemy_transform.translation) < 0.5 {
+        if enemy.has_dived && player.translation.distance(enemy_transform.translation) < 0.75 {
             enemy.is_attached = true;
             enemy.has_dived = false;
             game_state.attached_enemies += 1;
@@ -178,13 +269,13 @@ fn move_enemy(
 
             if player.translation.distance(enemy_transform.translation) < 3.0 {
                 enemy.has_dived = true;
+                enemy.velocity = (player.translation - enemy_transform.translation).normalize() * 0.5 * speed;
                 if let Some(animation_entity) = animation_link.entity {
                     let mut animation = animations.get_mut(animation_entity).unwrap();
                     animation.play(game_assets.person_dive.clone_weak());
                     enemy.current_animation = game_assets.person_dive.clone_weak();
-                    animation.set_speed(enemy.velocity.length() / 2.0);
+                    animation.set_speed(enemy.velocity.length() / 6.0);
                 }
-                enemy.velocity = enemy.velocity.normalize() * 0.5 * speed;
             }
         }
 

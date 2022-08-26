@@ -1,6 +1,7 @@
 use crate::{AppState, game_state, collision, assets::GameAssets, player::Player, ingame,
-LEFT_END, RIGHT_END, LEFT_GOAL, RIGHT_GOAL};
+LEFT_END, RIGHT_END, LEFT_GOAL, RIGHT_GOAL, BOTTOM_END, TOP_END};
 use bevy::prelude::*;
+use rand::Rng;
 use bevy::gltf::Gltf;
 use std::f32::consts::{FRAC_PI_2};
 
@@ -32,17 +33,34 @@ fn handle_launch_football_event(
     mut commands: Commands,
     mut launch_football_event_reader: EventReader<LaunchFootballEvent>,
     game_assets: Res<GameAssets>,
+    collidables: collision::Collidables,
     assets_gltf: Res<Assets<Gltf>>,
     game_state: Res<game_state::GameState>,
 ) {
     for event in launch_football_event_reader.iter() {
-        println!("launch event read");
         if let Some(gltf) = assets_gltf.get(&game_assets.football.clone()) {
             let left_side = Vec3::new(0.0, 0.0, ((LEFT_GOAL - LEFT_END) / 2.0) + LEFT_END);
             let right_side = Vec3::new(0.0, 0.0, ((RIGHT_GOAL - RIGHT_END) / 2.0) + RIGHT_END);
 
             let position = if game_state.touchdown_on_leftside { right_side } else { left_side };
-            let target = Vec3::new(0.0, 0.0, 0.0);
+
+            let mut target = None;
+            let mut rng = rand::thread_rng();
+            let z_buffer = ((RIGHT_GOAL - LEFT_GOAL).abs() * 0.25);
+            let x_buffer = ((TOP_END - BOTTOM_END).abs() * 0.02);
+            let min_z = LEFT_GOAL + z_buffer;
+            let max_z = RIGHT_GOAL - z_buffer;
+            let min_x = BOTTOM_END + x_buffer;
+            let max_x = TOP_END - x_buffer;
+            while target.is_none() {
+                let potential_position = Vec3::new(rng.gen_range(min_x..max_x), 
+                                                   0.0, 
+                                                   rng.gen_range(min_z..max_z));
+                if !collidables.is_in_collidable(&potential_position) {
+                    target = Some(potential_position);
+                }
+            }
+
             commands.spawn_bundle(SceneBundle {
                         scene: gltf.scenes[0].clone(),
                         transform: {
@@ -54,7 +72,7 @@ fn handle_launch_football_event(
                     })
                     .insert(Football {
                         has_landed: false,
-                        target: target,
+                        target: target.unwrap(),
                         starting_position: position,
                         current_movement_time: 0.0,
                     })
@@ -114,6 +132,7 @@ fn move_football(
             if football.current_movement_time >= flight_time {
                 football.current_movement_time = 0.0;
                 football.has_landed = true;
+                transform.rotation = Quat::IDENTITY;
             }
         }
     }

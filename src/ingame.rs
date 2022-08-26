@@ -1,7 +1,7 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, collision, component_adder, game_camera,
     game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink,
-    combine, enemy, football,
+    combine, enemy, football, TOP_END, LEFT_GOAL,
 };
 use std::f32::consts::{TAU, PI};
 use bevy::gltf::Gltf;
@@ -67,7 +67,7 @@ fn setup(
     game_assets: Res<GameAssets>,
     asset_server: Res<AssetServer>,
     assets_gltf: Res<Assets<Gltf>>,
-    game_state: Res<game_state::GameState>,
+    mut game_state: ResMut<game_state::GameState>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut component_adder: ResMut<component_adder::ComponentAdder>,
@@ -75,6 +75,8 @@ fn setup(
 ) {
     println!("Setting up ingame");
 
+    game_state.attached_enemies = 0;
+    game_state.touchdown_on_leftside = false;
     game_camera::spawn_camera(&mut commands, CleanupMarker);
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
@@ -84,6 +86,11 @@ fn setup(
     if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
+                    transform: {
+                        let mut t = Transform::from_xyz(0.0, 0.0, LEFT_GOAL);
+                        t.rotate_y(TAU * 0.75);
+                        t
+                    },
                     ..default()
                 })
                 .insert_bundle(player::PlayerBundle::new())
@@ -174,7 +181,7 @@ fn setup(
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
                     transform: {
-                        let mut t = Transform::from_xyz(0.0, 0.0, -(game_state.maze_size / 2.0));
+                        let mut t = Transform::from_xyz(TOP_END * 0.5, 0.0, -(game_state.maze_size / 2.0));
                         t.rotate_y(TAU * 0.75);
                         t
                     },

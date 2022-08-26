@@ -28,7 +28,7 @@ impl GameState {
             score: 0,
             music_on: music_on,
             attached_enemies: 0, 
-            maze_size: 30.0,
+            maze_size: 80.0,
             touchdown_on_leftside: false,
         }
     }
@@ -40,7 +40,7 @@ impl Default for GameState {
             score: 0,
             music_on: true,
             attached_enemies: 0, 
-            maze_size: 30.0,
+            maze_size: 80.0,
             touchdown_on_leftside: false,
         }
     }

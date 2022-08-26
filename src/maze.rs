@@ -18,14 +18,45 @@ pub struct CornStalk {
     pub random: f32,
 }
 
+#[derive(Component)]
+pub struct ShrinkCorn {
+    pub shrink_time: f32,
+    pub direction: Vec3, 
+}
+
 pub struct MazePlugin;
 impl Plugin for MazePlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(animate_corn)
+                .with_system(shrink_corn)
                 .with_system(spawn_corn)
         );
+    }
+}
+
+fn shrink_corn( 
+    mut corns: Query<(&mut Transform, &mut ShrinkCorn, &AnimationLink)>,
+    mut animations: Query<&mut AnimationPlayer>,
+    time: Res<Time>,
+) {
+    for (mut transform, mut shrink_corn, animation_link) in &mut corns {
+        shrink_corn.shrink_time -= time.delta_seconds();
+        shrink_corn.shrink_time.clamp(0.0, 10.0);
+
+        if shrink_corn.shrink_time <= 0.0 {
+            transform.scale.x = 0.1;
+            transform.scale.y = 0.1;
+            if let Some(animation_entity) = animation_link.entity {
+                if let Ok(mut animation) = animations.get_mut(animation_entity) {
+                    animation.pause();
+                }
+            }
+        } else {
+            transform.scale.y -= 0.1;
+            transform.rotation.lerp(Quat::from_axis_angle(Vec3::X, 0.0), time.delta_seconds());
+        }
     }
 }
 

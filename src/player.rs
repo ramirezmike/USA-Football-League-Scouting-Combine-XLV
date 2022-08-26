@@ -9,13 +9,38 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugin(InputManagerPlugin::<PlayerAction>::default())
             .add_event::<PlayerMoveEvent>()
+            .add_event::<PlayerBladeEvent>()
             .add_system_set(
                 SystemSet::on_update(AppState::InGame)
                     .with_system(handle_controllers.before(handle_input))
                     .with_system(handle_input)
+                    .with_system(handle_player_blade_event)
                     .with_system(check_for_touchdown)
                     .with_system(move_player.after(handle_input)),
             );
+    }
+}
+
+pub struct PlayerBladeEvent {
+    pub entity: Entity,
+}
+
+pub fn handle_player_blade_event(
+    mut player_blade_event_reader: EventReader<PlayerBladeEvent>,
+    mut players: Query<(&mut Player, &AnimationLink)>,
+    mut animations: Query<&mut AnimationPlayer>,
+    game_assets: ResMut<GameAssets>,
+) {
+    for event in player_blade_event_reader.iter() {
+        if let Ok((mut player, animation_link)) = players.get_mut(event.entity) {
+            if let Some(animation_entity) = animation_link.entity {
+                let mut animation = animations.get_mut(animation_entity).unwrap();
+                animation.play(game_assets.person_dive.clone_weak());
+                player.current_animation = game_assets.person_dive.clone_weak();
+                animation.set_speed(8.0);
+            }
+            player.is_dead = true;
+        }
     }
 }
 
@@ -56,6 +81,8 @@ pub fn move_player(
     }
 
     for (entity, mut transform, mut player, animation_link) in players.iter_mut() {
+        if player.is_dead { continue; }
+
         let speed: f32 = player.speed;
         let rotation_speed: f32 = player.rotation_speed;
         let friction: f32 = player.friction;
@@ -65,13 +92,9 @@ pub fn move_player(
             match move_event.movement {
                 Movement::Normal(direction) => {
                     let acceleration = Vec3::from(direction);
-                    let speed = speed *
-                               if game_state.attached_enemies > 0 {
+                    let speed = speed -
                                // slow down player for each enemy attached
-                                (0.8 * game_state.attached_enemies as f32)
-                               } else {
-                                   1.0
-                               };
+                                ((speed * 0.1) * game_state.attached_enemies as f32);
                     player.velocity += (acceleration.zero_signum() * speed) * time.delta_seconds();
                 }
             }
@@ -169,6 +192,7 @@ pub struct Player {
     pub speed: f32,
     pub rotation_speed: f32,
     pub friction: f32,
+    pub is_dead: bool,
     pub random: f32,
     pub current_animation: Handle<AnimationClip>,
     pub has_football: bool,
@@ -182,6 +206,7 @@ impl Player {
             velocity: Vec3::default(),
             speed: 40.0,
             rotation_speed: 1.0,
+            is_dead: false,
             friction: 0.01,
             random: rng.gen_range(0.5..1.0),
             current_animation: Handle::<AnimationClip>::default(),

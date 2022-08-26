@@ -27,6 +27,52 @@ pub struct Collidables<'w, 's> {
 }
 
 impl<'w, 's> Collidables<'w, 's> {
+    pub fn is_in_collidable(&self, position: &Vec3) -> bool {
+        if position.z <= LEFT_END ||
+           position.z >= RIGHT_END ||
+           position.x <= BOTTOM_END ||
+           position.x >= TOP_END {
+           return true;
+        }
+
+        if self.collidables.iter().count() == 0 && self.dynamic_collidables.iter().count() == 0 {
+            return false;
+        }
+
+        for collidable in self.collidables.iter() {
+            if position.x <= collidable.aabb.max.x
+                && position.x >= collidable.aabb.min.x
+                && position.z <= collidable.aabb.max.z
+                && position.z >= collidable.aabb.min.z
+            {
+                return true;
+            }
+        }
+
+        let dynamic_collidables = self.dynamic_collidables
+                                      .iter()
+                                      .filter_map(|(entity, _)| self.aabbs.get(entity).ok());
+
+        for (aabb, global_transform) in dynamic_collidables {
+            let matrix = global_transform.compute_matrix();
+            let inverse_matrix = matrix.inverse();
+            let min = aabb.min();
+            let max = aabb.max();
+
+            let transformed_new = inverse_matrix.transform_point3(*position);
+
+            if transformed_new.x <= max.x
+                && transformed_new.x >= min.x
+                && transformed_new.z <= max.z
+                && transformed_new.z >= min.z
+            {
+                return true; 
+            }
+        }
+
+        return false;
+    }
+
     pub fn fit_in(&self, current: &Vec3, new: &mut Vec3, velocity: &mut Vec3, time: &Res<Time>) {
         if self.collidables.iter().count() == 0 && self.dynamic_collidables.iter().count() == 0 {
             return;
@@ -141,4 +187,3 @@ impl<'w, 's> Collidables<'w, 's> {
 
     }
 }
-

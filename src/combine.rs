@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{
-    AppState, maze::CornStalk, assets::GameAssets, component_adder::AnimationLink,
-    collision, game_state, ZeroSignum,
+    AppState, maze::CornStalk, assets::GameAssets, component_adder::AnimationLink, maze,
+    collision, game_state, ZeroSignum, football, player, enemy,
 };
 use bevy::render::primitives::Aabb;
 use rand::thread_rng;
@@ -15,6 +15,7 @@ impl Plugin for CombinePlugin {
             SystemSet::on_update(AppState::InGame)
                 .with_system(animate_combine)
                 .with_system(harvest_corn)
+                .with_system(detect_blade_collisions)
                 .with_system(handle_corn_collision)
         );
     }
@@ -88,16 +89,81 @@ fn handle_corn_collision(
                               && corn_inverse.z < max.z;
 
             if corn_in_hitbox {
-                corn_transform.scale.y = 0.1;
-//              corn.is_harvested = true;
-//              commands.entity(entity)
-//                      .remove::<collision::Collidable>();
-                commands.entity(entity).despawn_recursive();
+                corn.is_harvested = true;
+                commands.entity(entity)
+                        .insert(maze::ShrinkCorn {
+                            direction: blade_transform.right(),
+                            shrink_time: 2.0,
+                        })
+                        .remove::<collision::Collidable>();
             }
         }
     }
 }
 
+fn detect_blade_collisions(
+    mut commands: Commands,
+    mut other_entities: 
+        ParamSet<(
+            Query<(Entity, &Transform), With<player::Player>>,
+            Query<(Entity, &Transform), With<enemy::Enemy>>,
+            Query<(Entity, &Transform), With<football::Football>>,
+        )>,
+    mut player_blade_event_writer: EventWriter<player::PlayerBladeEvent>, 
+    mut enemy_blade_event_writer: EventWriter<enemy::EnemyBladeEvent>,
+    mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
+    combine_blades: Query<(&Transform, &CombineBlade, &Aabb, &GlobalTransform), Without<CornStalk>>,
+) {
+    for (blade_transform, blade, blade_aabb, blade_global_transform) in &combine_blades {
+        let blade_global_matrix = blade_global_transform.compute_matrix();
+        let blade_inverse_transform_matrix = blade_global_matrix.inverse();
+        let min: Vec3 = blade_aabb.min().into();
+        let max: Vec3 = blade_aabb.max().into();
+
+        for (entity, player_transform) in &other_entities.p0() {
+            let player_translation = player_transform.translation;
+            let player_inverse = blade_inverse_transform_matrix.transform_point3(player_translation);
+
+            let player_in_hitbox = player_inverse.x > min.x
+                                && player_inverse.x < max.x
+                                && player_inverse.z > min.z
+                                && player_inverse.z < max.z;
+
+            if player_in_hitbox {
+                player_blade_event_writer.send(player::PlayerBladeEvent { entity });
+            }
+        }
+
+        for (entity, enemy_transform) in &other_entities.p1() {
+            let enemy_translation = enemy_transform.translation;
+            let enemy_inverse = blade_inverse_transform_matrix.transform_point3(enemy_translation);
+
+            let enemy_in_hitbox = enemy_inverse.x > min.x
+                               && enemy_inverse.x < max.x
+                               && enemy_inverse.z > min.z
+                               && enemy_inverse.z < max.z;
+
+            if enemy_in_hitbox {
+                enemy_blade_event_writer.send(enemy::EnemyBladeEvent { entity });
+            }
+        }
+
+        for (entity, football_transform) in &other_entities.p2() {
+            let football_translation = football_transform.translation;
+            let football_inverse = blade_inverse_transform_matrix.transform_point3(football_translation);
+
+            let football_in_hitbox = football_inverse.x > min.x
+                                  && football_inverse.x < max.x
+                                  && football_inverse.z > min.z
+                                  && football_inverse.z < max.z;
+
+            if football_in_hitbox {
+                commands.entity(entity).despawn_recursive();
+                football_launch_event_writer.send(football::LaunchFootballEvent);
+            }
+        }
+    }
+}
 
 fn harvest_corn(
     mut combines: Query<(&mut Combine, &mut Transform), Without<CornStalk>>,

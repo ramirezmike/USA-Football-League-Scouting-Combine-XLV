@@ -1,4 +1,4 @@
-use crate::{player};
+use crate::{player, LEFT_GOAL};
 use bevy::input::mouse::{MouseMotion, MouseWheel};
 use bevy::prelude::*;
 use std::f32::consts::{TAU, PI};
@@ -144,7 +144,7 @@ pub fn spawn_camera<T: Component + Clone>(commands: &mut Commands, cleanup_marke
     println!("Spawning camera");
     commands.spawn_bundle(Camera3dBundle {
         transform: {
-            let mut t = Transform::from_xyz(-29.1, 16.0, 0.0);
+            let mut t = Transform::from_xyz(-29.1, 16.0, LEFT_GOAL);
             t.rotation = Quat::from_axis_angle(Vec3::new(-0.31264523, -0.8969426, -0.3126451), 1.6793457);  
             t
         },
