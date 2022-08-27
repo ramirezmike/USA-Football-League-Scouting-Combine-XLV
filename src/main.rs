@@ -8,7 +8,10 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 
 mod asset_loading;
 mod assets;
+mod banter;
 mod audio;
+mod cutscene;
+mod billboard;
 mod collision;
 mod combine;
 mod component_adder;
@@ -19,9 +22,11 @@ mod game_controller;
 mod game_camera;
 mod game_state;
 mod ingame;
+mod ingame_ui;
 mod maze;
 mod menus;
 mod player;
+mod other_persons;
 mod title_screen;
 mod shaders;
 mod ui;
@@ -46,16 +51,20 @@ fn main() {
         .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(audio::GameAudioPlugin)
         .add_plugin(assets::AssetsPlugin)
+        .add_plugin(banter::BanterPlugin)
+        .add_plugin(cutscene::CutscenePlugin)
         .add_plugin(asset_loading::AssetLoadingPlugin)
+        .add_plugin(billboard::BillboardPlugin)
         .add_plugin(component_adder::ComponentAdderPlugin)
         .add_plugin(enemy::EnemyPlugin)
         .add_plugin(football::FootballPlugin)
         .add_plugin(combine::CombinePlugin)
         .add_plugin(game_state::GameStatePlugin)
-//      .add_plugin(ingame_ui::InGameUIPlugin)
+        .add_plugin(ingame_ui::InGameUIPlugin)
         .add_plugin(ingame::InGamePlugin)
         .add_plugin(maze::MazePlugin)
         .add_plugin(game_controller::GameControllerPlugin)
+        .add_plugin(other_persons::OtherPersonsPlugin)
         .add_plugin(shaders::ShadersPlugin)
         .add_plugin(title_screen::TitlePlugin)
         .add_plugin(player::PlayerPlugin)
@@ -70,6 +79,7 @@ fn main() {
 pub enum AppState {
     Initial,
     Pause,
+    Cutscene,
     Debug,
     TitleScreen,
     InGame,
@@ -96,6 +106,9 @@ fn debug(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
     mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
+    mut kill_player_event_writer: EventWriter<player::PlayerBladeEvent>,
+    mut textbox_event_writer: EventWriter<ingame_ui::SetTextBoxEvent>,
+    players: Query<Entity, With<player::Player>>,
  ) {
     if keys.just_pressed(KeyCode::Q) {
         exit.send(AppExit);
@@ -107,6 +120,51 @@ fn debug(
 
     if keys.just_pressed(KeyCode::F) {
         football_launch_event_writer.send(football::LaunchFootballEvent);
+    }
+
+    if keys.just_pressed(KeyCode::E) {
+        for entity in &players {
+            kill_player_event_writer.send(player::PlayerBladeEvent { entity });
+        }
+    }
+
+    if keys.just_pressed(KeyCode::T) {
+        let texts = vec!(ingame_ui::TextBoxText {
+            text: "Blah blah blah".to_string(),
+            speed: 1.01,
+            character: ingame_ui::DisplayCharacter::Will,
+            animation_clip: game_assets.host_talk.clone(),
+            after_text_displayed_delay: 1.0,
+        }, ingame_ui::TextBoxText {
+            text: "Ok ok ok?".to_string(),
+            speed: 0.5,
+            character: ingame_ui::DisplayCharacter::Bill,
+            animation_clip: game_assets.host_look_left.clone(),
+            after_text_displayed_delay: 1.0,
+        }, ingame_ui::TextBoxText {
+            text: "no no no".to_string(),
+            speed: 0.5,
+            after_text_displayed_delay: 1.0,
+            character: ingame_ui::DisplayCharacter::Will,
+            animation_clip: game_assets.host_look_left_talk.clone(),
+        }, ingame_ui::TextBoxText {
+            text: "yes yes yes".to_string(),
+            speed: 0.5,
+            after_text_displayed_delay: 1.0,
+            character: ingame_ui::DisplayCharacter::Will,
+            animation_clip: game_assets.host_look_right.clone(),
+        }, ingame_ui::TextBoxText {
+            text: "yo word word".to_string(),
+            speed: 0.5,
+            after_text_displayed_delay: 1.0,
+            character: ingame_ui::DisplayCharacter::Bill,
+            animation_clip: game_assets.host_look_right_talk.clone(),
+        });
+
+        println!("Sent texts");
+        textbox_event_writer.send(ingame_ui::SetTextBoxEvent {
+            texts
+        });
     }
 }
 

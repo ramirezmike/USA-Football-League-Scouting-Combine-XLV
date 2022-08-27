@@ -31,7 +31,7 @@ pub enum Heading {
 
 impl Default for Heading {
     fn default() -> Self {
-        Heading::Right
+        Heading::Left
     }
 }
 
@@ -54,7 +54,7 @@ impl Default for Combine {
             velocity: Vec3::default(),
             speed: 20.0,
             current_rotation_time: 0.0,
-            heading: Heading::Right,
+            heading: Heading::Left,
             target_rotation: Quat::from_rotation_y(TAU * 0.75),
             target_x_coordinate: 0.0,
             friction: 0.01,
@@ -206,8 +206,20 @@ fn harvest_corn(
                     }
                 }
             },
-            Heading::Up | Heading::Down => {
-                if (combine_transform.translation.x - combine.target_x_coordinate).abs() < 0.1 {
+            Heading::Up => {
+                if combine_transform.translation.x >= combine.target_x_coordinate {
+                    combine.heading = if combine_transform.translation.z > 0.0 { Heading::Left } else { Heading::Right };
+                    combine.current_rotation_time = 0.0;
+                    combine.velocity.x = 0.0;
+                    combine.target_rotation = match combine.heading {
+                        Heading::Left => Quat::from_rotation_y(TAU * 0.25),
+                        Heading::Right => Quat::from_rotation_y(TAU * 0.75),
+                        _ => combine.target_rotation
+                    };
+                }
+            },
+            Heading::Down => {
+                if combine_transform.translation.x < combine.target_x_coordinate {
                     combine.heading = if combine_transform.translation.z > 0.0 { Heading::Left } else { Heading::Right };
                     combine.current_rotation_time = 0.0;
                     combine.velocity.x = 0.0;

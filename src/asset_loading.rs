@@ -41,7 +41,8 @@ pub struct AssetsHandler<'w, 's> {
     asset_server: Res<'w, AssetServer>,
     assets_loading: ResMut<'w, AssetsLoading>,
     meshes: ResMut<'w, Assets<Mesh>>,
-    materials: ResMut<'w, Assets<StandardMaterial>>,
+    pub materials: ResMut<'w, Assets<StandardMaterial>>,
+    pub images: ResMut<'w, Assets<Image>>,
     state: ResMut<'w, State<AppState>>,
     next_state: ResMut<'w, NextState>,
 

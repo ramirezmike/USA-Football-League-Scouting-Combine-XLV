@@ -27,7 +27,9 @@ pub struct ShrinkCorn {
 pub struct MazePlugin;
 impl Plugin for MazePlugin {
     fn build(&self, app: &mut App) {
-        app.add_system_set(
+        app.add_system(animate_corn)
+           .add_system(spawn_corn)
+           .add_system_set(
             SystemSet::on_update(AppState::InGame)
                 .with_system(animate_corn)
                 .with_system(shrink_corn)
@@ -98,12 +100,9 @@ fn spawn_corn(
         let mut rng = rand::thread_rng();
         for (mut maze_plane, mut visibility) in &mut maze_planes {
             if maze_plane.spawned { continue; }
-            println!("spawning maze things");
 
             let rows = ((maze_plane.aabb.max.x - maze_plane.aabb.min.x) / maze_thickness) as usize;
             let columns = ((maze_plane.aabb.max.z - maze_plane.aabb.min.z) / maze_thickness) as usize;
-
-            println!("rows {} columns {} aabb: {:?}", rows, columns, maze_plane.aabb);
 
             for row in 0..rows {
                 for column in 0..columns {

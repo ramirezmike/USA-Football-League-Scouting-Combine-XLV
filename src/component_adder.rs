@@ -1,7 +1,12 @@
-use crate::{collision, maze, combine};
+use crate::{collision, maze, combine, assets::GameAssets, ingame, other_persons};
 use bevy::prelude::*;
+use bevy::gltf::Gltf;
 use bevy::render::primitives::Aabb;
 use uuid::Uuid;
+use std::f32::consts::{FRAC_PI_2, TAU};
+use bevy::render::{
+    view::RenderLayers,
+};
 
 pub struct ComponentAdderPlugin;
 impl Plugin for ComponentAdderPlugin {
@@ -31,6 +36,9 @@ fn add_components(
     mut commands: Commands,
     mut items: Query<(Entity, &Aabb, &GlobalTransform, &mut Name, &mut Visibility), With<Parent>>,
     mut component_adder: ResMut<ComponentAdder>,
+    game_assets: Res<GameAssets>,
+    asset_server: Res<AssetServer>,
+    assets_gltf: Res<Assets<Gltf>>,
 ) {
     if component_adder.has_added {
         return;
@@ -92,6 +100,57 @@ fn add_components(
             change_name = true;
         }
 
+        if name.as_str().contains("bill") {
+            if let Some(gltf) = assets_gltf.get(&game_assets.bill_person.clone()) {
+                let matrix = global_transform.compute_matrix();
+                commands.spawn_bundle(SceneBundle {
+                            scene: gltf.scenes[0].clone(),
+                            transform: {
+                                let mut t = Transform::from_translation(matrix.transform_point3(aabb.center.into()));
+                                t.translation.y = 0.0;
+                                t.rotation = Quat::from_rotation_y(TAU * 0.5);
+                                t
+                            },
+                            ..default()
+                        })
+                        .insert(other_persons::BillPerson)
+                        .insert(AnimationLink {
+                            entity: None
+                        })
+                        .insert(ingame::CleanupMarker);
+                visibility.is_visible = false;
+            }
+
+            change_name = true;
+        }
+
+        if name.as_str().contains("will") {
+            if let Some(gltf) = assets_gltf.get(&game_assets.will_person.clone()) {
+                let matrix = global_transform.compute_matrix();
+                let first_pass_layer = RenderLayers::layer(1);
+
+                commands.spawn_bundle(SceneBundle {
+                            scene: gltf.scenes[0].clone(),
+                            transform: {
+                                let mut t = Transform::from_translation(matrix.transform_point3(aabb.center.into()));
+                                t.translation.y = 0.0;
+                                t.rotation = Quat::from_rotation_y(TAU * 0.5);
+                                t
+                            },
+                            ..default()
+                        })
+                        .insert(other_persons::WillPerson)
+                        .insert(first_pass_layer)
+                        .insert(AnimationLink {
+                            entity: None
+                        })
+                        .insert(ingame::CleanupMarker);
+                visibility.is_visible = false;
+            }
+
+            change_name = true;
+        }
+
         if change_name {
             *name = Name::new(Uuid::new_v4().to_string());
         }
@@ -110,18 +169,9 @@ fn link_animations(
     mut animation_links: Query<(&mut AnimationLink, &Children)>,
     animations: Query<(&Parent, Entity), With<AnimationPlayer>>,
 ) {
-    if component_adder.has_linked {
-        return;
-    }
-
-    // need to wait until things are actually placed in the world
-    if component_adder.frame_cooldown < 2 {
-        return;
-    }
-
     for (mut link, children) in &mut animation_links {
         let is_none = link.entity.is_none();
-        if is_none  {
+        if is_none {
             for child in children {
                 for (parent, entity) in &animations {
                     if parent.get() == *child {

@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football, ingame, billboard::Billboard};
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use rand::Rng;
@@ -26,13 +26,14 @@ pub struct PlayerBladeEvent {
 }
 
 pub fn handle_player_blade_event(
+    mut commands: Commands,
     mut player_blade_event_reader: EventReader<PlayerBladeEvent>,
-    mut players: Query<(&mut Player, &AnimationLink)>,
+    mut players: Query<(&mut Player, &Transform, &AnimationLink)>,
     mut animations: Query<&mut AnimationPlayer>,
     game_assets: ResMut<GameAssets>,
 ) {
     for event in player_blade_event_reader.iter() {
-        if let Ok((mut player, animation_link)) = players.get_mut(event.entity) {
+        if let Ok((mut player, transform, animation_link)) = players.get_mut(event.entity) {
             if let Some(animation_entity) = animation_link.entity {
                 let mut animation = animations.get_mut(animation_entity).unwrap();
                 animation.play(game_assets.person_dive.clone_weak());
@@ -40,6 +41,20 @@ pub fn handle_player_blade_event(
                 animation.set_speed(8.0);
             }
             player.is_dead = true;
+
+//          println!("creating billboard");
+//          commands.spawn_bundle(PbrBundle {
+//                  mesh: game_assets.blood_mesh.clone(),
+//                  material: game_assets.blood.material.clone(),
+//                  transform: {
+//                      let mut t = transform.clone();
+//                      t.rotation = Quat::from_axis_angle(Vec3::X, (3.0 * std::f32::consts::PI) / 2.0);
+//                      t
+//                  },
+//                  ..Default::default()
+//              })
+//              .insert(Billboard)
+//              .insert(ingame::CleanupMarker);
         }
     }
 }
@@ -242,6 +257,7 @@ impl PlayerBundle {
         // Movement
         input_map.insert(KeyCode::Up, Up);
         input_map.insert(KeyCode::W, Up);
+        input_map.insert(KeyCode::Z, Up);
         input_map.insert(GamepadButtonType::DPadUp, Up);
 
         input_map.insert(KeyCode::Down, Down);
@@ -250,6 +266,7 @@ impl PlayerBundle {
 
         input_map.insert(KeyCode::Left, Left);
         input_map.insert(KeyCode::A, Left);
+        input_map.insert(KeyCode::Q, Left);
         input_map.insert(GamepadButtonType::DPadLeft, Left);
 
         input_map.insert(KeyCode::Right, Right);

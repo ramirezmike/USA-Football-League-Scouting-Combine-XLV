@@ -14,7 +14,7 @@ impl Plugin for TextSizePlugin {
 
 #[derive(SystemParam)]
 pub struct TextScaler<'w, 's> {
-    window_size: Res<'w, WindowSize>,
+    pub window_size: Res<'w, WindowSize>,
 
     #[system_param(ignore)]
     phantom: PhantomData<&'s ()>,
@@ -28,8 +28,8 @@ impl<'w, 's> TextScaler<'w, 's> {
 }
 
 pub struct WindowSize {
-    width: f32,
-    height: f32,
+    pub width: f32,
+    pub height: f32,
 }
 
 fn store_current_window_size(
