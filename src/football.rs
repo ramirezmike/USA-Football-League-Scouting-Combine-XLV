@@ -1,5 +1,5 @@
 use crate::{AppState, game_state, collision, assets::GameAssets, player::Player, ingame,
-LEFT_END, RIGHT_END, LEFT_GOAL, RIGHT_GOAL, BOTTOM_END, TOP_END};
+LEFT_END, RIGHT_END, LEFT_GOAL, RIGHT_GOAL, BOTTOM_END, TOP_END, enemy};
 use bevy::prelude::*;
 use rand::Rng;
 use bevy::gltf::Gltf;
@@ -35,7 +35,8 @@ fn handle_launch_football_event(
     game_assets: Res<GameAssets>,
     collidables: collision::Collidables,
     assets_gltf: Res<Assets<Gltf>>,
-    game_state: Res<game_state::GameState>,
+    mut game_state: ResMut<game_state::GameState>,
+    mut spawn_enemies_event_writer: EventWriter<enemy::SpawnEnemiesEvent>,
 ) {
     for event in launch_football_event_reader.iter() {
         if let Some(gltf) = assets_gltf.get(&game_assets.football.clone()) {
@@ -77,6 +78,10 @@ fn handle_launch_football_event(
                         current_movement_time: 0.0,
                     })
                     .insert(ingame::CleanupMarker);
+        }
+        if !game_state.enemies_spawned {
+            spawn_enemies_event_writer.send(enemy::SpawnEnemiesEvent);
+            game_state.enemies_spawned = true;
         }
     }
 }

@@ -1,23 +1,28 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, maze, player, LEFT_GOAL, RIGHT_GOAL, TOP_END, BOTTOM_END};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, maze, player, LEFT_GOAL, RIGHT_GOAL, TOP_END, BOTTOM_END, ingame};
 use bevy::prelude::*;
 use rand::Rng;
 use std::collections::HashMap;
 use bevy::render::primitives::Aabb;
 use std::f32::consts::{FRAC_PI_2, TAU};
+use bevy::gltf::Gltf;
 
 pub struct EnemyPlugin;
 impl Plugin for EnemyPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
             SystemSet::on_update(AppState::InGame)
+                .with_system(handle_spawn_enemies_event)
                 .with_system(scale_lines_of_sight)
                 .with_system(handle_flying_enemies)
                 .with_system(handle_enemy_blade_event)
                 .with_system(move_enemy.after(scale_lines_of_sight)),
         )
+        .add_event::<SpawnEnemiesEvent>()
         .add_event::<EnemyBladeEvent>();
     }
 }
+
+pub struct SpawnEnemiesEvent;
 
 #[derive(Component)]
 pub struct Enemy {
@@ -67,6 +72,73 @@ pub struct EnemyLineOfSight;
 
 pub struct EnemyBladeEvent {
     pub entity: Entity
+}
+
+fn handle_spawn_enemies_event( 
+    mut commands: Commands,
+    mut spawn_enemies_event_reader: EventReader<SpawnEnemiesEvent>,
+    game_assets: Res<GameAssets>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    collidables: collision::Collidables,
+    assets_gltf: Res<Assets<Gltf>>,
+    game_state: Res<game_state::GameState>,
+) {
+    for event in spawn_enemies_event_reader.iter() {
+        let enemy_count = 3;
+
+        if let Some(gltf) = assets_gltf.get(&game_assets.enemy.clone()) {
+            for _ in 0..enemy_count {
+                let mut target = None;
+                let mut rng = rand::thread_rng();
+                let z_buffer = ((RIGHT_GOAL - LEFT_GOAL).abs() * 0.25);
+                let x_buffer = ((TOP_END - BOTTOM_END).abs() * 0.02);
+                let min_z = LEFT_GOAL + z_buffer;
+                let max_z = RIGHT_GOAL - z_buffer;
+                let min_x = BOTTOM_END + x_buffer;
+                let max_x = TOP_END - x_buffer;
+                while target.is_none() {
+                    let potential_position = Vec3::new(rng.gen_range(min_x..max_x), 
+                                                       0.0, 
+                                                       rng.gen_range(min_z..max_z));
+                    if !collidables.is_in_collidable(&potential_position) {
+                        target = Some(potential_position);
+                    }
+                }
+
+                let target = target.expect("uhh this was populated a second ago");
+
+                let line_of_sight_id = commands
+                    .spawn_bundle(PbrBundle {
+                        mesh: meshes.add(Mesh::from(shape::Box::default())),
+                        material: materials.add(StandardMaterial {
+                            unlit: true,
+                            base_color: Color::rgba(1.0, 0.0, 0.0, 0.6),
+                            alpha_mode: AlphaMode::Blend,
+                            ..Default::default()
+                        }),
+                        visibility: Visibility {
+                            is_visible: false
+                        },
+                        transform: Transform::from_scale(Vec3::ZERO),
+                        ..Default::default()
+                    })
+                    .insert(EnemyLineOfSight { })
+                    .insert(ingame::CleanupMarker)
+                    .id();
+                commands.spawn_bundle(SceneBundle {
+                            scene: gltf.scenes[0].clone(),
+                            transform: Transform::from_xyz(target.x, 0.0, target.z),
+                            ..default()
+                        })
+                        .insert(Enemy::new(line_of_sight_id))
+                        .insert(AnimationLink {
+                            entity: None
+                        })
+                        .insert(ingame::CleanupMarker);
+            }
+        }
+    }
 }
 
 pub fn handle_flying_enemies(

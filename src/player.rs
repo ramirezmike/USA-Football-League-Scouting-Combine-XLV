@@ -99,14 +99,28 @@ pub fn move_player(
     }
 
     for (entity, mut transform, mut player, animation_link) in players.iter_mut() {
-        if player.is_dead { 
+        if !player.is_tackled && game_state.attached_enemies >= 3 {
+            if let Some(animation_entity) = animation_link.entity {
+                let mut animation = animations.get_mut(animation_entity).unwrap();
+                animation.play(game_assets.person_dive.clone_weak());
+                player.current_animation = game_assets.person_dive.clone_weak();
+                animation.set_speed(8.0);
+            }
+            player.is_tackled = true;
+            player.dead_cooldown = 1.2;
+        }
+        if player.is_dead || player.is_tackled { 
             player.dead_cooldown -= time.delta_seconds();     
             player.dead_cooldown = player.dead_cooldown.clamp(-3.0, 30.0);
 
             if player.dead_cooldown <= 0.0 { 
-                game_state.death_count += 1;
-                player.is_dead = false;
-                cutscene_state.init(cutscene::Cutscene::Death);
+                if player.is_dead {
+                    game_state.death_count += 1;
+                    player.is_dead = false;
+                    cutscene_state.init(cutscene::Cutscene::Death);
+                } else if player.is_tackled {
+                    cutscene_state.init(cutscene::Cutscene::Tackle);
+                }
                 return; 
             }
             continue; 
@@ -222,6 +236,7 @@ pub struct Player {
     pub rotation_speed: f32,
     pub friction: f32,
     pub is_dead: bool,
+    pub is_tackled: bool,
     pub dead_cooldown: f32,
     pub random: f32,
     pub current_animation: Handle<AnimationClip>,
@@ -237,6 +252,7 @@ impl Player {
             speed: 40.0,
             rotation_speed: 1.0,
             is_dead: false,
+            is_tackled: false,
             dead_cooldown: 0.0,
             friction: 0.01,
             random: rng.gen_range(0.5..1.0),

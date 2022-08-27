@@ -75,6 +75,7 @@ impl CutsceneState {
 pub enum Cutscene {
     Intro,
     Death,
+    Tackle,
 }
 
 impl Default for Cutscene {
@@ -94,7 +95,7 @@ fn play_cutscene(
     mut textbox: ResMut<TextBox>,
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<GameAssets>,
-    game_state: Res<game_state::GameState>,
+    mut game_state: ResMut<game_state::GameState>,
     mut will_animation_link: Query<&AnimationLink, With<other_persons::WillPerson>>,
     mut bill_animation_link: Query<&AnimationLink, With<other_persons::BillPerson>>,
     mut animations: Query<&mut AnimationPlayer>,
@@ -679,6 +680,33 @@ fn play_cutscene(
                     56 => {
                         textbox.queued_text = Some(TextBoxText {
                             text: "Oh, the kicker is ready, I think it's about to begin. Let's watch!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        game_state.corn_spawned = true;
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                    }
+                }
+            },
+            Cutscene::Tackle => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Oooph, that's a tackle! Back to the goal line.".to_string(),
                             speed: text_speed,
                             auto: false
                         });

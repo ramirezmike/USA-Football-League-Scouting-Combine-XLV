@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use crate::{
     AppState, collision, assets::GameAssets, ingame, component_adder::{AnimationLink, ComponentAdder},
+    game_state,
 };
 use bevy::gltf::Gltf;
 use rand::{random, Rng};
@@ -31,9 +32,7 @@ impl Plugin for MazePlugin {
            .add_system(spawn_corn)
            .add_system_set(
             SystemSet::on_update(AppState::InGame)
-                .with_system(animate_corn)
                 .with_system(shrink_corn)
-                .with_system(spawn_corn)
         );
     }
 }
@@ -128,7 +127,7 @@ fn spawn_corn(
                     .insert(AnimationLink {
                         entity: None
                     })
-                    .insert(ingame::CleanupMarker)
+                    .insert(game_state::LevelOverCleanupMarker)
                     .insert(CornStalk {
                         is_harvested: false,
                         animation_set: false,

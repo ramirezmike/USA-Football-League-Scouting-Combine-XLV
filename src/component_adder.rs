@@ -1,4 +1,4 @@
-use crate::{collision, maze, combine, assets::GameAssets, ingame, other_persons};
+use crate::{collision, maze, combine, assets::GameAssets, ingame, other_persons, game_state};
 use bevy::prelude::*;
 use bevy::gltf::Gltf;
 use bevy::render::primitives::Aabb;
@@ -36,6 +36,7 @@ fn add_components(
     mut commands: Commands,
     mut items: Query<(Entity, &Aabb, &GlobalTransform, &mut Name, &mut Visibility), With<Parent>>,
     mut component_adder: ResMut<ComponentAdder>,
+    mut game_state: ResMut<game_state::GameState>,
     game_assets: Res<GameAssets>,
     asset_server: Res<AssetServer>,
     assets_gltf: Res<Assets<Gltf>>,
@@ -74,18 +75,21 @@ fn add_components(
         }
 
         if name.as_str().contains("maze") {
-            let matrix = global_transform.compute_matrix();
-            commands
-                .entity(entity)
-                .insert(maze::MazeMarker {
-                    spawned: false,
-                    aabb: collision::WorldAabb {
-                        min: matrix.transform_point3(aabb.min().into()),
-                        max: matrix.transform_point3(aabb.max().into()),
-                    },
-                });
+            if !game_state.corn_spawned {
+                let matrix = global_transform.compute_matrix();
+                commands
+                    .entity(entity)
+                    .insert(maze::MazeMarker {
+                        spawned: false,
+                        aabb: collision::WorldAabb {
+                            min: matrix.transform_point3(aabb.min().into()),
+                            max: matrix.transform_point3(aabb.max().into()),
+                        },
+                    });
 
-            println!("found maze");
+                println!("found maze");
+            }
+            visibility.is_visible = false;
             change_name = true;
         }
 

@@ -143,6 +143,7 @@ pub fn setup(
 
     banter_state.reset(&game_assets);
     game_state.attached_enemies = 0;
+    game_state.enemies_spawned = false;
     game_state.touchdown_on_leftside = false;
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
@@ -184,7 +185,6 @@ pub fn setup(
                 .insert(CleanupMarker);
     }
 
-    let enemy_count = 1;
     if let Some(gltf) = assets_gltf.get(&game_assets.enemy.clone()) {
         // kickers
         commands.spawn_bundle(SceneBundle {
@@ -207,63 +207,6 @@ pub fn setup(
                     ..default()
                 })
                 .insert(CleanupMarker);
-
-            let line_of_sight_id = commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::default())),
-                    material: materials.add(StandardMaterial {
-                        unlit: true,
-                        base_color: Color::rgba(1.0, 0.0, 0.0, 0.6),
-                        alpha_mode: AlphaMode::Blend,
-                        ..Default::default()
-                    }),
-                    visibility: Visibility {
-                        is_visible: false
-                    },
-                    transform: Transform::from_scale(Vec3::ZERO),
-                    ..Default::default()
-                })
-                .insert(enemy::EnemyLineOfSight { })
-                .insert(CleanupMarker)
-                .id();
-            commands.spawn_bundle(SceneBundle {
-                        scene: gltf.scenes[0].clone(),
-                        transform: Transform::from_xyz(-5.0, 0.0, -8.0),
-                        ..default()
-                    })
-                    .insert(enemy::Enemy::new(line_of_sight_id))
-                    .insert(AnimationLink {
-                        entity: None
-                    })
-                    .insert(CleanupMarker);
-            let line_of_sight_id = commands
-                .spawn_bundle(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Box::default())),
-                    material: materials.add(StandardMaterial {
-                        unlit: true,
-                        base_color: Color::rgba(1.0, 0.0, 0.0, 0.6),
-                        alpha_mode: AlphaMode::Blend,
-                        ..Default::default()
-                    }),
-                    visibility: Visibility {
-                        is_visible: false
-                    },
-                    transform: Transform::from_scale(Vec3::ZERO),
-                    ..Default::default()
-                })
-                .insert(enemy::EnemyLineOfSight { })
-                .insert(CleanupMarker)
-                .id();
-            commands.spawn_bundle(SceneBundle {
-                        scene: gltf.scenes[0].clone(),
-                        transform: Transform::from_xyz(3.0, 0.0, 2.0),
-                        ..default()
-                    })
-                    .insert(enemy::Enemy::new(line_of_sight_id))
-                    .insert(AnimationLink {
-                        entity: None
-                    })
-                    .insert(CleanupMarker);
     }
 
     if let Some(gltf) = assets_gltf.get(&game_assets.combine.clone()) {

@@ -14,12 +14,17 @@ impl Plugin for GameStatePlugin {
     }
 }
 
+#[derive(Component)]
+pub struct LevelOverCleanupMarker;
+
 pub struct GameState {
     pub score: usize,
     pub music_on: bool,
     pub maze_size: f32,
     pub touchdown_on_leftside: bool,
     pub attached_enemies: usize,
+    pub enemies_spawned: bool,
+    pub corn_spawned: bool,
     pub death_count: usize,
 }
 
@@ -31,6 +36,8 @@ impl GameState {
             attached_enemies: 0, 
             maze_size: 80.0,
             touchdown_on_leftside: false,
+            corn_spawned: false,
+            enemies_spawned: false,
             death_count: 0,
         }
     }
@@ -42,7 +49,9 @@ impl Default for GameState {
             score: 0,
             music_on: true,
             attached_enemies: 0, 
+            enemies_spawned: false,
             maze_size: 80.0,
+            corn_spawned: false,
             death_count: 0,
             touchdown_on_leftside: false,
         }
