@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football, ingame, billboard::Billboard};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football, ingame, billboard::Billboard, cutscene};
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use rand::Rng;
@@ -30,6 +30,7 @@ pub fn handle_player_blade_event(
     mut player_blade_event_reader: EventReader<PlayerBladeEvent>,
     mut players: Query<(&mut Player, &Transform, &AnimationLink)>,
     mut animations: Query<&mut AnimationPlayer>,
+    mut game_state: ResMut<game_state::GameState>,
     game_assets: ResMut<GameAssets>,
 ) {
     for event in player_blade_event_reader.iter() {
@@ -41,6 +42,7 @@ pub fn handle_player_blade_event(
                 animation.set_speed(8.0);
             }
             player.is_dead = true;
+            player.dead_cooldown = 1.2;
 
 //          println!("creating billboard");
 //          commands.spawn_bundle(PbrBundle {
@@ -87,8 +89,9 @@ pub fn move_player(
     mut animations: Query<&mut AnimationPlayer>,
     mut player_move_event_reader: EventReader<PlayerMoveEvent>,
     collidables: collision::Collidables,
-    game_state: Res<game_state::GameState>,
+    mut game_state: ResMut<game_state::GameState>,
     game_assets: ResMut<GameAssets>,
+    mut cutscene_state: ResMut<cutscene::CutsceneState>,
 ) {
     let mut move_events = HashMap::new();
     for move_event in player_move_event_reader.iter() {
@@ -96,7 +99,18 @@ pub fn move_player(
     }
 
     for (entity, mut transform, mut player, animation_link) in players.iter_mut() {
-        if player.is_dead { continue; }
+        if player.is_dead { 
+            player.dead_cooldown -= time.delta_seconds();     
+            player.dead_cooldown = player.dead_cooldown.clamp(-3.0, 30.0);
+
+            if player.dead_cooldown <= 0.0 { 
+                game_state.death_count += 1;
+                player.is_dead = false;
+                cutscene_state.init(cutscene::Cutscene::Death);
+                return; 
+            }
+            continue; 
+        }
 
         let speed: f32 = player.speed;
         let rotation_speed: f32 = player.rotation_speed;
@@ -208,6 +222,7 @@ pub struct Player {
     pub rotation_speed: f32,
     pub friction: f32,
     pub is_dead: bool,
+    pub dead_cooldown: f32,
     pub random: f32,
     pub current_animation: Handle<AnimationClip>,
     pub has_football: bool,
@@ -222,6 +237,7 @@ impl Player {
             speed: 40.0,
             rotation_speed: 1.0,
             is_dead: false,
+            dead_cooldown: 0.0,
             friction: 0.01,
             random: rng.gen_range(0.5..1.0),
             current_animation: Handle::<AnimationClip>::default(),

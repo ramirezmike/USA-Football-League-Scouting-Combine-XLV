@@ -1,7 +1,7 @@
 use crate::{
     assets::GameAssets, cleanup, game_state, menus, AppState, ui::text_size, ingame, other_persons,
     component_adder::AnimationLink, game_camera, ingame_ui, title_screen::MenuAction, LEFT_GOAL, football,
-    asset_loading,
+    asset_loading, 
 };
 use std::mem;
 use bevy::prelude::*;
@@ -29,6 +29,7 @@ impl Plugin for CutscenePlugin {
         .add_event::<CutsceneEvent>()
         .insert_resource(TextBox::default())
         .add_system_set(SystemSet::on_enter(AppState::Cutscene)
+           .with_system(cleanup::<ingame_ui::CleanupMarker>)
            .with_system(setup_cutscene)
         )
         .add_system_set(SystemSet::on_exit(AppState::Cutscene)
@@ -73,6 +74,7 @@ impl CutsceneState {
 #[derive(Copy, Clone)]
 pub enum Cutscene {
     Intro,
+    Death,
 }
 
 impl Default for Cutscene {
@@ -92,6 +94,7 @@ fn play_cutscene(
     mut textbox: ResMut<TextBox>,
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<GameAssets>,
+    game_state: Res<game_state::GameState>,
     mut will_animation_link: Query<&AnimationLink, With<other_persons::WillPerson>>,
     mut bill_animation_link: Query<&AnimationLink, With<other_persons::BillPerson>>,
     mut animations: Query<&mut AnimationPlayer>,
@@ -693,6 +696,213 @@ fn play_cutscene(
                     }
                 }
             },
+            Cutscene::Death => {
+                match game_state.death_count {
+                    1 => {
+                        match cutscene_state.cutscene_index {
+                            0 => {
+                                camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                                camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                                cutscene_state.target_camera_translation = None;
+                                cutscene_state.target_camera_rotation = None;
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "Oh geez! The padding failed! What happened!?".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_talk.clone()); 
+                                will_animation = Some(game_assets.host_idle.clone()); 
+                            },
+                            1 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "Someone call the medics! ".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_idle.clone()); 
+                                will_animation = Some(game_assets.host_talk.clone()); 
+                            },
+                            2 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "I think... I think they're getting out...".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_talk.clone()); 
+                                will_animation = Some(game_assets.host_idle.clone()); 
+                            },
+                            3 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "...".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_idle.clone()); 
+                                will_animation = Some(game_assets.host_look_left.clone()); 
+                            },
+                            4 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "it.. it looks like they're ok?".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_talk.clone()); 
+                                will_animation = Some(game_assets.host_idle.clone()); 
+                            },
+                            5 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "They're standing up.. they just gave a thumbs-up.".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_talk.clone()); 
+                                will_animation = Some(game_assets.host_idle.clone()); 
+                            },
+                            6 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "I guess.. I guess we can just continue from here?".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                                will_animation = Some(game_assets.host_look_left.clone()); 
+                            },
+                            _ => {
+                                camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                               game_camera::INGAME_CAMERA_Y, 
+                                                               LEFT_GOAL);
+                                camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                            game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                                cutscene_state.current = None;
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                            }
+                        }
+                    },
+                    2 => {
+                        match cutscene_state.cutscene_index {
+                            0 => {
+                                camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                                camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                                cutscene_state.target_camera_translation = None;
+                                cutscene_state.target_camera_rotation = None;
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "OH NO NOT AGAIN!".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_talk.clone()); 
+                                will_animation = Some(game_assets.host_idle.clone()); 
+                            },
+                            1 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "You said the driver was a professional!".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_idle.clone()); 
+                                will_animation = Some(game_assets.host_talk.clone()); 
+                            },
+                            2 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "...".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_idle.clone()); 
+                                will_animation = Some(game_assets.host_idle.clone()); 
+                            },
+                            3 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "Wow, they're ok. I can't believe it.".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_idle.clone()); 
+                                will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                            },
+                            4 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "That was worst than the first time.".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_look_right.clone()); 
+                                will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                            },
+                            5 => {
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "Well.. ok, let's keep going.".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                                will_animation = Some(game_assets.host_look_left.clone()); 
+                            },
+                            _ => {
+                                camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                               game_camera::INGAME_CAMERA_Y, 
+                                                               LEFT_GOAL);
+                                camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                            game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                                cutscene_state.current = None;
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                            }
+                        }
+                    },
+                    3 => {
+                        match cutscene_state.cutscene_index {
+                            0 => {
+                                camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                                camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                                cutscene_state.target_camera_translation = None;
+                                cutscene_state.target_camera_rotation = None;
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "...Are they.. are they trying to do this?".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_look_right.clone()); 
+                                will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                            },
+                            _ => {
+                                camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                               game_camera::INGAME_CAMERA_Y, 
+                                                               LEFT_GOAL);
+                                camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                            game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                                cutscene_state.current = None;
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                            }
+                        }
+                    }
+                    _ => {
+                        match cutscene_state.cutscene_index {
+                            0 => {
+                                camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                                camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                                cutscene_state.target_camera_translation = None;
+                                cutscene_state.target_camera_rotation = None;
+                                textbox.queued_text = Some(TextBoxText {
+                                    text: "...".to_string(),
+                                    speed: text_speed,
+                                    auto: false
+                                });
+                                bill_animation = Some(game_assets.host_look_right.clone()); 
+                                will_animation = Some(game_assets.host_look_left.clone()); 
+                            },
+                            _ => {
+                                camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                               game_camera::INGAME_CAMERA_Y, 
+                                                               LEFT_GOAL);
+                                camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                            game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                                cutscene_state.current = None;
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                            }
+                        }
+                    }
+                }
+            }
             _ => ()
         }
     } else {

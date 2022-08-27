@@ -124,5 +124,6 @@ fn bill_talk_r(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
    weather
    what are we going to do with all this corn
    why is the combine called a combine
+   order food: our mic is hot!
 
 */

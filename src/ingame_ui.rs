@@ -30,6 +30,9 @@ impl Plugin for InGameUIPlugin {
     }
 }
 
+#[derive(Component)]
+pub struct CleanupMarker;
+
 fn update_ui(
     game_state: Res<game_state::GameState>,
     mut score_indicators: Query<&mut Text, With<ScoreIndicator>>,
@@ -60,6 +63,7 @@ fn setup(
             ..Default::default()
         })
         .insert(ingame::CleanupMarker)
+        .insert(CleanupMarker)
         .with_children(|parent| {
             parent
                 .spawn_bundle(NodeBundle {
@@ -150,6 +154,7 @@ fn setup(
         })
         .insert(OuterTextBoxContainer)
         .insert(ingame::CleanupMarker)
+        .insert(CleanupMarker)
         .insert(first_pass_layer) ;
 }
 
