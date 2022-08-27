@@ -162,9 +162,9 @@ fn get_primary_window_size(windows: &Res<Windows>) -> Vec2 {
 pub fn spawn_camera<T: Component + Clone>(
     commands: &mut Commands, cleanup_marker: T,
     game_assets: &Res<GameAssets>,
+    translation: Vec3,
+    rotation: Quat,
 ) {
-    let translation = Vec3::new(-5.0, 5.0, 0.0);
-
     let radius = translation.length();
 
     let first_pass_layer = RenderLayers::layer(1);
@@ -195,8 +195,9 @@ pub fn spawn_camera<T: Component + Clone>(
     println!("Spawning camera");
     commands.spawn_bundle(Camera3dBundle {
         transform: {
-            let mut t = Transform::from_xyz(INGAME_CAMERA_X, INGAME_CAMERA_Y, LEFT_GOAL);
-            t.rotation = Quat::from_axis_angle(INGAME_CAMERA_ROTATION_AXIS, INGAME_CAMERA_ROTATION_ANGLE);
+            let mut t = Transform::from_translation(translation);
+            t.rotation = rotation;
+
             t
         },
         camera: Camera {

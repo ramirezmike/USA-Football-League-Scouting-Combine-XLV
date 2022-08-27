@@ -135,14 +135,15 @@ pub fn setup(
     mut component_adder: ResMut<component_adder::ComponentAdder>,
     mut audio: GameAudio,
     mut banter_state: ResMut<banter::BanterState>,
-    mut cutscene_event_writer: EventWriter<cutscene::CutsceneEvent>,
+    cutscene_state: Res<cutscene::CutsceneState>,
+    mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
+    mut camera: Query<&mut Transform, With<game_camera::PanOrbitCamera>>,
 ) {
-    println!("Setting up ingame");
+    println!("Setting up ingame!");
 
     banter_state.reset(&game_assets);
     game_state.attached_enemies = 0;
     game_state.touchdown_on_leftside = false;
-    game_camera::spawn_camera(&mut commands, CleanupMarker, &game_assets);
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
         brightness: 0.50,
@@ -185,7 +186,28 @@ pub fn setup(
 
     let enemy_count = 1;
     if let Some(gltf) = assets_gltf.get(&game_assets.enemy.clone()) {
-        for _ in 0..enemy_count {
+        // kickers
+        commands.spawn_bundle(SceneBundle {
+                    scene: gltf.scenes[0].clone(),
+                    transform: {
+                        let mut t = Transform::from_xyz(6.976, 0.0, -48.0);
+                        t.rotation = Quat::from_rotation_y(TAU * 0.75);
+                        t
+                    },
+                    ..default()
+                })
+                .insert(CleanupMarker);
+        commands.spawn_bundle(SceneBundle {
+                    scene: gltf.scenes[0].clone(),
+                    transform: {
+                        let mut t = Transform::from_xyz(6.976, 0.0, 48.0);
+                        t.rotation = Quat::from_rotation_y(TAU * 0.25);
+                        t
+                    },
+                    ..default()
+                })
+                .insert(CleanupMarker);
+
             let line_of_sight_id = commands
                 .spawn_bundle(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Box::default())),
@@ -242,7 +264,6 @@ pub fn setup(
                         entity: None
                     })
                     .insert(CleanupMarker);
-        }
     }
 
     if let Some(gltf) = assets_gltf.get(&game_assets.combine.clone()) {
@@ -279,7 +300,28 @@ pub fn setup(
         audio.stop_bgm();
     }
 
-    cutscene_event_writer.send(cutscene::CutsceneEvent {
-        cutscene: cutscene::Cutscene::Intro
-    })
+    if cutscene_state.current.is_none() {
+        if camera.iter().len() == 0 {
+            game_camera::spawn_camera(&mut commands, CleanupMarker, &game_assets,
+                                      Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                               game_camera::INGAME_CAMERA_Y, 
+                                               LEFT_GOAL),
+                                  Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                            game_camera::INGAME_CAMERA_ROTATION_ANGLE));
+        } else {
+            for mut camera in &mut camera {
+                camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                               game_camera::INGAME_CAMERA_Y, 
+                                               LEFT_GOAL);
+                camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                            game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+            }
+        }
+
+        football_launch_event_writer.send(football::LaunchFootballEvent);
+    } else if camera.iter().len() == 0 {
+        game_camera::spawn_camera(&mut commands, CleanupMarker, &game_assets,
+                                  Vec3::new(22.5, 1.5, 0.0),
+                            Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247));
+    }
 }

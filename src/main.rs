@@ -96,7 +96,9 @@ pub fn cleanup<T: Component>(mut commands: Commands, entities: Query<Entity, Wit
 fn bootstrap(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
+    mut cutscene_state: ResMut<cutscene::CutsceneState>,
 ) {
+    cutscene_state.init(cutscene::Cutscene::Intro);
     assets_handler.load(AppState::InGame, &mut game_assets);
 }
 
@@ -109,6 +111,7 @@ fn debug(
     mut kill_player_event_writer: EventWriter<player::PlayerBladeEvent>,
     mut textbox_event_writer: EventWriter<ingame_ui::SetTextBoxEvent>,
     players: Query<Entity, With<player::Player>>,
+    mut cutscene_state: ResMut<cutscene::CutsceneState>,
  ) {
     if keys.just_pressed(KeyCode::Q) {
         exit.send(AppExit);
@@ -126,6 +129,10 @@ fn debug(
         for entity in &players {
             kill_player_event_writer.send(player::PlayerBladeEvent { entity });
         }
+    }
+
+    if keys.just_pressed(KeyCode::G) {
+        cutscene_state.cutscene_index = 1000;
     }
 
     if keys.just_pressed(KeyCode::T) {

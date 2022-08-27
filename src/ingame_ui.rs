@@ -15,8 +15,8 @@ pub struct InGameUIPlugin;
 impl Plugin for InGameUIPlugin {
     fn build(&self, app: &mut App) {
         app.add_system_set(
-                SystemSet::on_exit(AppState::Cutscene)
-                       .with_system(setup).after(ingame::setup)
+                SystemSet::on_exit(AppState::ResetInGame)
+                       .with_system(setup)
             )
             .insert_resource(TextBox::default())
             .add_event::<SetTextBoxEvent>()

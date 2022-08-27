@@ -55,7 +55,7 @@ impl Default for Combine {
             speed: 20.0,
             current_rotation_time: 0.0,
             heading: Heading::Left,
-            target_rotation: Quat::from_rotation_y(TAU * 0.75),
+            target_rotation: Quat::from_rotation_y(TAU * 0.25),
             target_x_coordinate: 0.0,
             friction: 0.01,
         }

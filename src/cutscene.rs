@@ -1,6 +1,7 @@
 use crate::{
     assets::GameAssets, cleanup, game_state, menus, AppState, ui::text_size, ingame, other_persons,
-    component_adder::AnimationLink, game_camera, ingame_ui, title_screen::MenuAction,
+    component_adder::AnimationLink, game_camera, ingame_ui, title_screen::MenuAction, LEFT_GOAL, football,
+    asset_loading,
 };
 use std::mem;
 use bevy::prelude::*;
@@ -23,7 +24,7 @@ impl Plugin for CutscenePlugin {
 
         )
         .add_system_set(SystemSet::on_update(AppState::InGame)
-                .with_system(handle_cutscene_event)
+            .with_system(handle_cutscene_event)
         )
         .add_event::<CutsceneEvent>()
         .insert_resource(TextBox::default())
@@ -32,6 +33,7 @@ impl Plugin for CutscenePlugin {
         )
         .add_system_set(SystemSet::on_exit(AppState::Cutscene)
            .with_system(cleanup::<CleanupMarker>)
+           .with_system(cleanup::<ingame::CleanupMarker>)
         )
         .insert_resource(CutsceneState::default());
     }
@@ -42,8 +44,8 @@ struct CleanupMarker;
 
 #[derive(Default)]
 pub struct CutsceneState {
-    current: Cutscene,
-    cutscene_index: usize,
+    pub current: Option::<Cutscene>,
+    pub cutscene_index: usize,
     cooldown: f32,
     input_cooldown: f32,
     waiting_on_input: bool,
@@ -56,7 +58,7 @@ pub struct CutsceneState {
 
 impl CutsceneState {
     pub fn init(&mut self, cutscene: Cutscene) {
-        self.current = cutscene;
+        self.current = Some(cutscene);
         self.cutscene_index = 0;
         self.cooldown = 0.0;
         self.input_cooldown = 0.0;
@@ -88,11 +90,12 @@ fn play_cutscene(
     mut cutscene_state: ResMut<CutsceneState>,
     mut camera: Query<&mut Transform, With<game_camera::PanOrbitCamera>>,
     mut textbox: ResMut<TextBox>,
-    mut app_state: ResMut<State<AppState>>,
-    game_assets: Res<GameAssets>,
+    mut assets_handler: asset_loading::AssetsHandler,
+    mut game_assets: ResMut<GameAssets>,
     mut will_animation_link: Query<&AnimationLink, With<other_persons::WillPerson>>,
     mut bill_animation_link: Query<&AnimationLink, With<other_persons::BillPerson>>,
     mut animations: Query<&mut AnimationPlayer>,
+    mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
 ) {
     if let Ok(will_link_check) = will_animation_link.get_single() {
         if will_link_check.entity.is_none() {
@@ -119,571 +122,587 @@ fn play_cutscene(
     cutscene_state.waiting_on_input = true;
     let text_speed = 0.01;
 
-    match cutscene_state.current {
-        Cutscene::Intro => {
-            match cutscene_state.cutscene_index {
-                0 => {
-                    camera.translation = Vec3::new(22.5, 1.5, 0.0);
-                    camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
-                    cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Hello! I'm Bill.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                1 => {
-                    cutscene_state.target_camera_translation = None;
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "and I'm Will!".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_idle.clone()); 
-                    will_animation = Some(game_assets.host_talk.clone());
-                },
-                2 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "and we're here live from the AFL Scouting Combine XLV in Indianapolis!".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                3 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "it's very exciting!".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                4 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "I've been looking forward to this event all year.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                5 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "ha ha ha, ..yeah.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                6 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "well, if you're just joining in at home and have no idea what's going on..".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_talk.clone()); 
-                },
-                7 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "The AFL Scouting Combine is an annual, week-long showcase where athletes perform mental and physical trials to potentially be drafted on an AFL team.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_talk.clone()); 
-                },
-                8 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "We're already a couple days in and most of the crowd-favorite events have passed, but everyone's pumped for this year's new challenge.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_idle.clone()); 
-                    will_animation = Some(game_assets.host_talk.clone()); 
-                },
-                9 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "The Combine Combine Challenge!".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_idle.clone()); 
-                    will_animation = Some(game_assets.host_talk.clone()); 
-                },
-                10 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "It's very exciting.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                11 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "very exciting".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                12 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Bill, I lost my notes, can you tell our viewers what it's all about?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                13 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Ha ha, that keeps happening why is that? ha ha".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                14 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "The challenge is for players to score as many touchdowns as they can while navigating a corn maze".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                15 => {
-                    cutscene_state.target_camera_translation = Some((Vec3::new(-18.6, 6.5, 16.041729)));
-                    cutscene_state.target_camera_rotation = Some(
-                        Quat::from_axis_angle(Vec3::new(-0.5818577, -0.7968926, -0.1624936), 0.6599797));
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "As you can see the field is set.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                16 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "We've been generously donated 1,000 acres worth of corn.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                17 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "And between attempts we have a team of 200 volunteers meticulously re-constructing the mazes.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                18 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "This ensures each player has the same exact maze so there aren't any unfair advantages.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                19 => {
-                    camera.translation = Vec3::new(19.3, 1.5, 0.0);
-                    camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+    if let Some(current) = cutscene_state.current {
+        match current {
+            Cutscene::Intro => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(22.5, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Hello! I'm Bill.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    1 => {
+                        cutscene_state.target_camera_translation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "and I'm Will!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_idle.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone());
+                    },
+                    2 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "and we're here live from the AFL Scouting Combine XLV in Indianapolis!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    3 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "it's very exciting!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    4 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I've been looking forward to this event all year.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    5 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "ha ha ha, ..yeah.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    6 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "well, if you're just joining in at home and have no idea what's going on..".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
+                    7 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The AFL Scouting Combine is an annual, week-long showcase where athletes perform mental and physical trials to potentially be drafted on an AFL team.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
+                    8 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We're already a couple days in and most of the crowd-favorite events have passed, but everyone's pumped for this year's new challenge.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_idle.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
+                    9 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The Combine Combine Challenge!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_idle.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
+                    10 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "It's very exciting.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    11 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "very exciting".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    12 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Bill, I lost my notes, can you tell our viewers what it's all about?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    13 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Ha ha, that keeps happening why is that? ha ha".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    14 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The challenge is for players to score as many touchdowns as they can while navigating a corn maze".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    15 => {
+                        cutscene_state.target_camera_translation = Some((Vec3::new(-18.6, 6.5, 16.041729)));
+                        cutscene_state.target_camera_rotation = Some(
+                            Quat::from_axis_angle(Vec3::new(-0.5818577, -0.7968926, -0.1624936), 0.6599797));
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "As you can see the field is set.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    16 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We've been generously donated 1,000 acres worth of corn.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    17 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "And between attempts we have a team of 200 volunteers meticulously re-constructing the mazes.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    18 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "This ensures each player has the same exact maze so there aren't any unfair advantages.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    19 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
 
-                    cutscene_state.target_camera_translation = None;
-                    cutscene_state.target_camera_rotation = None;
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
 
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "That seems excessive.. that's like a lot of corn.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                20 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Ha ha.. yeah".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                21 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Let's talk more about how this works".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_right.clone()); 
-                },
-                22 => {
-                    cutscene_state.target_camera_translation = Some(Vec3::new(-13.1, 2.5, -40.6));
-                    cutscene_state.target_camera_rotation = Some(
-                        Quat::from_axis_angle(Vec3::new(-0.07643463, -0.9914023, -0.10620499), 1.8807149));
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "That seems excessive.. that's like a lot of corn.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    20 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Ha ha.. yeah".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    21 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Let's talk more about how this works".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    22 => {
+                        cutscene_state.target_camera_translation = Some(Vec3::new(-13.1, 2.5, -40.6));
+                        cutscene_state.target_camera_rotation = Some(
+                            Quat::from_axis_angle(Vec3::new(-0.07643463, -0.9914023, -0.10620499), 1.8807149));
 
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Players will start on one side of the field and a kicker will launch a ball into the maze.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_right.clone()); 
-                },
-                23 => {
-                    cutscene_state.target_camera_translation = Some(Vec3::new(-11.3, 7.9, 14.1));
-                    cutscene_state.target_camera_rotation = Some(
-                        Quat::from_axis_angle(Vec3::new(-0.50110954, -0.84660023, -0.17932819), 0.78708464));
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Players will start on one side of the field and a kicker will launch a ball into the maze.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    23 => {
+                        cutscene_state.target_camera_translation = Some(Vec3::new(-11.3, 7.9, 14.1));
+                        cutscene_state.target_camera_rotation = Some(
+                            Quat::from_axis_angle(Vec3::new(-0.50110954, -0.84660023, -0.17932819), 0.78708464));
 
-                    cutscene_state.camera_speed = 0.2;
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "The player will navigate the maze, find the ball and score a point on the other side.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_right.clone()); 
-                },
-                24 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Once they score, a ball will be launched from the opposite side into the maze.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_right.clone()); 
-                },
-                25 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "And the player will have to turn back, find the ball and score a touchdown on the opposite side.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_right.clone()); 
-                },
-                26 => {
-                    camera.translation = Vec3::new(19.3, 1.5, 0.0);
-                    camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
-                    cutscene_state.camera_speed = 2.0;
-                    cutscene_state.target_camera_translation = None;
-                    cutscene_state.target_camera_rotation = None;
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "And the cycle just repeats from there.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                27 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "That's a lot of running.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                28 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Yeah..".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                29 => {
-                    camera.translation = Vec3::new(-11.3, 7.9, 14.1);
-                    cutscene_state.target_camera_translation = Some(Vec3::new(-11.3, 7.9, -14.1));
-                    camera.rotation = Quat::from_axis_angle(Vec3::new(-0.50110954, -0.84660023, -0.17932819), 0.78708464);
-                    cutscene_state.camera_speed = 0.2;
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "In the maze, we have seasoned AFL players ready to chase and tackle the player.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                30 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Players won't be able to run as fast if they have one of these professionals holding them down.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                31 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "And if they get tackled, they'll have to go back to the goal line.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                32 => {
-                    camera.translation = Vec3::new(19.3, 1.5, 0.0);
-                    camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
-                    cutscene_state.target_camera_translation = None;
-                    cutscene_state.target_camera_rotation = None;
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "I think that about covers everything.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                33 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "What about the combine?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                34 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Oh! Right! The combine!".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                35 => {
-                    cutscene_state.target_camera_translation = Some(Vec3::new(-3.0, 6.5, 28.7));
-                    cutscene_state.target_camera_rotation = Some(
-                        Quat::from_axis_angle(Vec3::new(-0.09976758, -0.9702991, -0.22037746), 2.3035543));
+                        cutscene_state.camera_speed = 0.2;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The player will navigate the maze, find the ball and score a point on the other side.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    24 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Once they score, a ball will be launched from the opposite side into the maze.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    25 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "And the player will have to turn back, find the ball and score a touchdown on the opposite side.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    26 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.camera_speed = 2.0;
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "And the cycle just repeats from there.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    27 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "That's a lot of running.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    28 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Yeah..".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    29 => {
+                        camera.translation = Vec3::new(-11.3, 7.9, 14.1);
+                        cutscene_state.target_camera_translation = Some(Vec3::new(-11.3, 7.9, -14.1));
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.50110954, -0.84660023, -0.17932819), 0.78708464);
+                        cutscene_state.camera_speed = 0.2;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "In the maze, we have seasoned AFL players ready to chase and tackle the player.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    30 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Players won't be able to run as fast if they have one of these professionals holding them down.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    31 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "And if they get tackled, they'll have to go back to the goal line.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    32 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I think that about covers everything.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    33 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "What about the combine?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    34 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Oh! Right! The combine!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    35 => {
+                        cutscene_state.target_camera_translation = Some(Vec3::new(-3.0, 6.5, 28.7));
+                        cutscene_state.target_camera_rotation = Some(
+                            Quat::from_axis_angle(Vec3::new(-0.09976758, -0.9702991, -0.22037746), 2.3035543));
 
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "While the player is attempting to score, a combine will be harvesting the maze.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                36 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Don't worry though, we have a professional driver in the combine.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                37 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "And players are equipped with special padding that can't be sliced by the combine's blades".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                38 => {
-                    camera.translation = Vec3::new(19.3, 1.5, 0.0);
-                    camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
-                    cutscene_state.target_camera_translation = None;
-                    cutscene_state.target_camera_rotation = None;
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Bill, this seems really dangerous.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                39 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "We have an ambulance on site. And the players have signed waivers.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                40 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "...".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                41 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "The round ends once the combine has completely harvested the maze.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_right.clone()); 
-                },
-                42 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Then, we'll have our team re-plant the maze for the next round.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                43 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "They just... plant that right into the astroturf?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                44 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Yeah.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                45 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "We know we have players with different preferences on how to compete.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                46 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Players can use the WASD keys, the Arrow keys or ZQSD keys to navigate the maze.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                47 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "...".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                48 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Bill.. what are you talking about?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                49 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Ha ha, Will, football is played a little different these days.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                50 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "I think that about covers everything though, right?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                51 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Actually, this always bugged me.. why is it called \"Combine\"?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                52 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "OH, that's just because there used to be several scouting showcases across the country.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                53 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "and then one year they decided to combine them into one.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                54 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "...and so instead of calling it the \"Scouting Showcase\", they called it.. \"Combine\"?".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right.clone()); 
-                    will_animation = Some(game_assets.host_look_left_talk.clone()); 
-                },
-                55 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "ha... yeah.. I uhh.. that's what it's called, man, I don't know.".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_look_right_talk.clone()); 
-                    will_animation = Some(game_assets.host_look_left.clone()); 
-                },
-                56 => {
-                    textbox.queued_text = Some(TextBoxText {
-                        text: "Oh, the kicker is ready, I think it's about to begin. Let's watch!".to_string(),
-                        speed: text_speed,
-                        auto: false
-                    });
-                    bill_animation = Some(game_assets.host_talk.clone()); 
-                    will_animation = Some(game_assets.host_idle.clone()); 
-                },
-                _ => {
-                    app_state.pop().unwrap();
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "While the player is attempting to score, a combine will be harvesting the maze.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    36 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Don't worry though, we have a professional driver in the combine.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    37 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Players are equipped with special padding that can't be sliced by the combine's blades. They should just safely bounce away.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    38 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Bill, this seems really dangerous.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    39 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We have an ambulance on site. And the players have signed waivers.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    40 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "...".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    41 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The round ends once the combine has completely harvested the maze.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    42 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Then, we'll have our team re-plant the maze for the next round.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    43 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "They just... plant that right into the astroturf?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    44 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Yeah.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    45 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We know we have players with different preferences on how to compete.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    46 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Players can use the WASD keys, the Arrow keys or ZQSD keys to navigate the maze.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    47 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "...".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    48 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Bill.. what are you talking about?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    49 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Ha ha, Will, football is played a little different these days.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    50 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I think that about covers everything though, right?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    51 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Actually, this always bugged me.. why is it called \"Combine\"?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    52 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "OH, that's just because there used to be several scouting showcases across the country.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    53 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "and then one year they decided to combine them into one.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    54 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "...and so instead of calling it the \"Scouting Showcase\", they called it.. \"Combine\"?".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    55 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "ha... yeah.. I uhh.. that's what it's called, man, I don't know.".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    56 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Oh, the kicker is ready, I think it's about to begin. Let's watch!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                    }
                 }
-            }
-        },
-        _ => ()
+            },
+            _ => ()
+        }
+    } else {
+        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                       game_camera::INGAME_CAMERA_Y, 
+                                       LEFT_GOAL);
+        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+        cutscene_state.current = None;
+        assets_handler.load(AppState::ResetInGame, &mut game_assets);
     }
 
     if let Some(will_animation) = will_animation {
@@ -800,6 +819,9 @@ fn handle_cutscene_event(
 ) {
     for event in cutscene_event_reader.iter() {
         cutscene_state.init(event.cutscene);
+    }
+
+    if cutscene_state.current.is_some() {
         app_state.push(AppState::Cutscene).unwrap();
     }
 }

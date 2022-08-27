@@ -39,8 +39,8 @@ fn handle_launch_football_event(
 ) {
     for event in launch_football_event_reader.iter() {
         if let Some(gltf) = assets_gltf.get(&game_assets.football.clone()) {
-            let left_side = Vec3::new(0.0, 0.0, ((LEFT_GOAL - LEFT_END) / 2.0) + LEFT_END);
-            let right_side = Vec3::new(0.0, 0.0, ((RIGHT_GOAL - RIGHT_END) / 2.0) + RIGHT_END);
+            let left_side = Vec3::new(6.976, 0.0, -48.0);
+            let right_side = Vec3::new(6.976, 0.0, 48.0);
 
             let position = if game_state.touchdown_on_leftside { right_side } else { left_side };
 

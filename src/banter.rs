@@ -24,6 +24,7 @@ pub struct BanterState {
 impl BanterState {
     pub fn reset(&mut self, game_assets: &GameAssets) {
         self.banters = generate_banter(game_assets);
+        self.cooldown = BANTER_COOLDOWN;
     }
 }
 
@@ -115,3 +116,13 @@ fn bill_talk_r(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
         after_text_displayed_delay: 1.0,
     }
 }
+
+/*
+   our names rhyme
+   mustaches
+   I LIKE CORN kid
+   weather
+   what are we going to do with all this corn
+   why is the combine called a combine
+
+*/
