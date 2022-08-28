@@ -164,6 +164,7 @@ fn play_cutscene(
                 }
             },
             Cutscene::LevelThreeIntro => {
+                println!("in level 3 intro {}", cutscene_state.cutscene_index);
                 match cutscene_state.cutscene_index {
                     0 => {
                         camera.translation = Vec3::new(22.5, 1.5, 0.0);
@@ -927,7 +928,7 @@ fn play_cutscene(
                         camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                                     game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                         cutscene_state.current = None;
-                        assets_handler.load(AppState::LevelOver, &mut game_assets, &game_state);
+                        assets_handler.load(AppState::TitleScreen, &mut game_assets, &game_state);
                     }
                 }
             },

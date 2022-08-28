@@ -202,7 +202,11 @@ fn harvest_corn(
 
                     if unharvested_corn.is_empty() {
                         println!("no more corn :(");
-                        cutscene_state.init(cutscene::Cutscene::RoundOneOver);
+                        match game_state.current_round {
+                            1 => cutscene_state.init(cutscene::Cutscene::RoundTwoOver),
+                            2 => cutscene_state.init(cutscene::Cutscene::RoundThreeOver),
+                            _ => cutscene_state.init(cutscene::Cutscene::RoundOneOver),
+                        }
                     }
 
                     let corn_transform = unharvested_corn.choose(&mut rng).map(|(_, t)| *t);

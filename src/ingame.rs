@@ -30,16 +30,20 @@ impl Plugin for InGamePlugin {
             SystemSet::on_update(AppState::ResetInGame)
                 .with_system(reset_ingame)
         )
+//      .add_system_set(
+//          SystemSet::on_update(AppState::Cutscene)
+//            .with_system(light_sway_2)
+//      )
         .add_system_set(
             SystemSet::on_update(AppState::InGame)
               .with_system(game_camera::follow_player)
               .with_system(game_camera::pan_orbit_camera)
-              .with_system(light_sway)
+              .with_system(spotlight_follow_player)
               .with_system(game_camera::handle_will_camera),
         );
     }
 }
-fn light_sway(
+fn spotlight_follow_player(
     player: Query<&Transform, (With<player::Player>, Without<SpotLight>)>,
     mut query: Query<(&mut Transform, &mut SpotLight)>
 ) {
@@ -49,6 +53,13 @@ fn light_sway(
     }
 }
 
+//  fn direction_light_check(
+//      query: Query<(&Transform, &DirectionalLight)>
+//  ) {
+//      for (transform, angles) in &query {
+//          println!("{:?}", transform.rotation.to_axis_angle());
+//      }
+//  }
 
 #[derive(Component, Copy, Clone)]
 pub struct CleanupMarker;
@@ -91,7 +102,7 @@ pub fn load(
 
     match game_state.current_round {
         1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
-        2 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_02.glb"),
+        2 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
         _ => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
     }
 
@@ -194,6 +205,7 @@ pub fn setup(
                     // Configure the projection to better fit the scene
         //            illuminance: 10000.0,
                     illuminance: 10000.0,
+                    color: Color::rgba(1.0, 0.756, 0.643, 1.0),
                     shadow_projection: OrthographicProjection {
                         left: -HALF_SIZE,
                         right: HALF_SIZE,
@@ -207,7 +219,7 @@ pub fn setup(
                     ..Default::default()
                 },
                 transform: Transform {
-                    rotation: Quat::from_rotation_x(0.80 * TAU),
+                    rotation: Quat::from_axis_angle(Vec3::new(-0.37420788, -0.89851606, 0.22942881), 1.1975679),
                     ..Default::default()
                 },
                 ..Default::default()
@@ -215,8 +227,6 @@ pub fn setup(
             .insert(CleanupMarker);
         },
         2 => {
-        },
-        _ => {
             // lights
             commands.insert_resource(AmbientLight {
                 color: Color::ALICE_BLUE,
@@ -254,6 +264,38 @@ pub fn setup(
                     },
                     ..default()
                 });
+        },
+        _ => {
+            // lights
+            commands.insert_resource(AmbientLight {
+                color: Color::WHITE,
+                brightness: 0.50,
+            });
+            const HALF_SIZE: f32 = 100.0;
+            commands.spawn_bundle(DirectionalLightBundle {
+                directional_light: DirectionalLight {
+                    // Configure the projection to better fit the scene
+        //            illuminance: 10000.0,
+                    illuminance: 10000.0,
+                    shadow_projection: OrthographicProjection {
+                        left: -HALF_SIZE,
+                        right: HALF_SIZE,
+                        bottom: -HALF_SIZE,
+                        top: HALF_SIZE,
+                        near: -10.0 * HALF_SIZE,
+                        far: 10.0 * HALF_SIZE,
+                        ..Default::default()
+                    },
+                    shadows_enabled: true,
+                    ..Default::default()
+                },
+                transform: Transform {
+                    rotation: Quat::from_rotation_x(0.80 * TAU),
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(CleanupMarker);
         }
     }
 

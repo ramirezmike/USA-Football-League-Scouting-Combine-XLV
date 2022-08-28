@@ -83,6 +83,58 @@ fn generate_banter(game_assets: &GameAssets) -> Vec::<Banter> {
         },
         Banter {
             texts: vec!(
+                bill_talk("We really lucked out with the weather today.", &game_assets),
+                bill_talk("It can get pretty chilly in December.", &game_assets),
+                will_talk("Bill... it's August.", &game_assets),
+                bill_talk("Yeah, but what if it wasn't?", &game_assets),
+                will_silent("...", &game_assets),
+            )
+        },
+        Banter {
+            texts: vec!(
+                bill_talk("yeah, and an order of chicken makhani.", &game_assets),
+                will_talk("Bill!", &game_assets),
+                bill_talk("and uhh, let's do level 7 spicy.", &game_assets),
+                will_talk("Bill! Your mic is hot!", &game_assets),
+                bill_talk("I'm not touching my mic..", &game_assets),
+                bill_talk("OH!", &game_assets),
+                will_silent("...", &game_assets),
+            )
+        },
+        Banter {
+            texts: vec!(
+                bill_talk("Why is the machine called combine?", &game_assets),
+                will_talk("Oh, that's easy.", &game_assets),
+                will_talk("The name derives from how it harvests.", &game_assets),
+                will_talk("It combines four harvesting operations.", &game_assets),
+                will_talk("Reaping, threshing, gathering..", &game_assets),
+                will_talk("and winnowing.", &game_assets),
+                bill_talk("o-oh ok.", &game_assets),
+            )
+        },
+        Banter {
+            texts: vec!(
+                will_talk("Are we going to have corn left over?", &game_assets),
+                bill_talk("Yeah.", &game_assets),
+            )
+        },
+        Banter {
+            texts: vec!(
+                bill_talk("For me, I really like corn.", &game_assets),
+                will_talk("What do you like about corn?", &game_assets),
+                bill_talk("It's corn!", &game_assets),
+                bill_talk("A big lump with knobs.", &game_assets),
+                bill_talk("I can't imagine a more beautiful thing", &game_assets),
+                will_silent("...", &game_assets),
+                bill_talk("I can tell you all about it.", &game_assets),
+                bill_talk("I mean, look at this thing.", &game_assets),
+                bill_talk("When I tried it with butter..", &game_assets),
+                bill_talk("EVERYTHING CHANGED", &game_assets),
+                will_silent("...", &game_assets),
+            )
+        },
+        Banter {
+            texts: vec!(
                 bill_talk("Who does your mustache?", &game_assets),
                 will_talk("d..does?", &game_assets),
                 bill_talk("Yeah, like, where do you go?", &game_assets),
@@ -132,12 +184,3 @@ fn bill_talk_r(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
         after_text_displayed_delay: 1.0,
     }
 }
-
-/*
-   I LIKE CORN kid
-   weather
-   what are we going to do with all this corn
-   why is the combine called a combine
-   order food: our mic is hot!
-
-*/

@@ -40,7 +40,6 @@ const RIGHT_END:f32 = 47.0;
 const BOTTOM_END:f32 = -19.471;
 const TOP_END:f32 = 20.471;
 
-
 fn main() {
     App::new()
         .insert_resource(AssetServerSettings {
@@ -50,7 +49,7 @@ fn main() {
 //      .add_plugin(LogDiagnosticsPlugin::default())
 //      .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
-        .add_plugin(WorldInspectorPlugin::new())
+//      .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(audio::GameAudioPlugin)
         .add_plugin(assets::AssetsPlugin)
         .add_plugin(banter::BanterPlugin)
@@ -105,16 +104,19 @@ fn bootstrap(
     mut cutscene_state: ResMut<cutscene::CutsceneState>,
     game_state: ResMut<game_state::GameState>,
     mut banter_state: ResMut<banter::BanterState>,
+    mut audio: audio::GameAudio,
 ) {
     // TODO: move this to title screen
     cutscene_state.init(cutscene::Cutscene::Intro);
     banter_state.reset(&game_assets);
+    audio.set_volume();
 
     assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
 //    assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
 }
 
 fn debug(
+    mut commands: Commands,
     keys: Res<Input<KeyCode>>, 
     game_state: ResMut<game_state::GameState>,
     mut exit: ResMut<Events<AppExit>>,
@@ -123,11 +125,18 @@ fn debug(
     mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
     mut kill_player_event_writer: EventWriter<player::PlayerBladeEvent>,
     mut textbox_event_writer: EventWriter<ingame_ui::SetTextBoxEvent>,
+    corn: Query<Entity, With<maze::CornStalk>>,
     players: Query<Entity, With<player::Player>>,
     mut cutscene_state: ResMut<cutscene::CutsceneState>,
  ) {
     if keys.just_pressed(KeyCode::Q) {
         exit.send(AppExit);
+    }
+
+    if keys.just_pressed(KeyCode::C) {
+        for entity in &corn {
+            commands.entity(entity).despawn_recursive();
+        }
     }
 
     if keys.just_pressed(KeyCode::R) {

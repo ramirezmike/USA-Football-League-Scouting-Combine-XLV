@@ -13,8 +13,11 @@ opt-level = 3
 [dependencies]
 bevy = "0.8.0"
 leafwing-input-manager = "0.5.0"
-bevy_kira_audio = { version = "0.11.0", features = ["wav"]}
+bevy_kira_audio = { version = "0.12.0", features = ["wav"]}
 noise = "0.7.0"
 rand = "0.8"
 uuid = { version = "1.1.2", features = ["v4"]}
 bevy-inspector-egui = "0.12.1"
+
+[patch.crates-io]
+wgpu = { git = "https://github.com/mockersf/wgpu/", branch = "unconditional-clear-workaround" }

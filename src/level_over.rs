@@ -27,8 +27,10 @@ fn load_next_level(
     game_state.corn_spawned = false;
     game_state.current_round += 1;
 
+    println!("setting up round {}", game_state.current_round);
     match game_state.current_round {
         1 => cutscene_state.init(cutscene::Cutscene::LevelTwoIntro),
+        2 => cutscene_state.init(cutscene::Cutscene::LevelThreeIntro),
         _ => cutscene_state.init(cutscene::Cutscene::Intro),
     }
 
