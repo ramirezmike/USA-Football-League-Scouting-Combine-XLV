@@ -39,7 +39,7 @@ pub struct GameAssets {
     pub tackle_sound: Handle<AudioSource>,
     pub bounce: Handle<AudioSource>,
     pub bill_speak: Handle<AudioSource>,
-    pub bgm_music: Handle<AudioSource>,
+    pub bgm: Handle<AudioSource>,
     pub titlescreen: Handle<AudioSource>,
 
     pub title_screen_background: asset_loading::GameTexture,

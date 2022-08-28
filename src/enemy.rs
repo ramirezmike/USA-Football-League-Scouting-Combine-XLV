@@ -121,7 +121,7 @@ fn handle_spawn_enemies_event(
                             ..Default::default()
                         }),
                         visibility: Visibility {
-                            is_visible: false
+                            is_visible: true 
                         },
                         transform: Transform::from_scale(Vec3::ZERO),
                         ..Default::default()
@@ -228,7 +228,7 @@ fn scale_lines_of_sight(
     let unharvested_corn = corns.iter()
                                 .filter(|(c, _)| !c.is_harvested)
                                 .collect::<Vec::<_>>();
-    let LOS_LENGTH = 25.0;
+    let LOS_LENGTH = 15.0;
     for (mut enemy, enemy_transform) in &mut enemies {
         if let Ok((mut line_of_sight, los_aabb, los_global_transform)) = lines_of_sight.get_mut(enemy.line_of_sight) {
             let los_global_matrix = los_global_transform.compute_matrix();

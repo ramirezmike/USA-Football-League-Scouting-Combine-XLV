@@ -104,8 +104,12 @@ fn bootstrap(
     mut game_assets: ResMut<assets::GameAssets>,
     mut cutscene_state: ResMut<cutscene::CutsceneState>,
     game_state: ResMut<game_state::GameState>,
+    mut banter_state: ResMut<banter::BanterState>,
 ) {
+    // TODO: move this to title screen
     cutscene_state.init(cutscene::Cutscene::Intro);
+    banter_state.reset(&game_assets);
+
 //    assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
       assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
 }

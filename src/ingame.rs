@@ -76,11 +76,12 @@ pub fn load(
     assets_handler.add_audio(&mut game_assets.bounce, "audio/bounce.wav");
     assets_handler.add_audio(&mut game_assets.football_pop, "audio/football_pop.wav");
     assets_handler.add_audio(&mut game_assets.bill_speak, "audio/bill_speak.wav");
-    assets_handler.add_audio(&mut game_assets.bgm_music, "audio/combine.ogg");
+    assets_handler.add_audio(&mut game_assets.bgm, "audio/combine.ogg");
 
     match game_state.current_round {
-        1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
-        _ => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
+        1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
+        2 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_02.glb"),
+        _ => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
     }
 
     assets_handler.add_material(&mut game_assets.bill_icon, "textures/bill.png", true);
@@ -165,8 +166,6 @@ pub fn setup(
     mut camera: Query<&mut Transform, With<game_camera::PanOrbitCamera>>,
 ) {
     println!("Setting up ingame!");
-
-    banter_state.reset(&game_assets);
     game_state.attached_enemies = 0;
     game_state.enemies_spawned = false;
     game_state.touchdown_on_leftside = false;
