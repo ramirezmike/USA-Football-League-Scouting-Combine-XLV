@@ -11,6 +11,7 @@ mod assets;
 mod banter;
 mod audio;
 mod cutscene;
+mod splash;
 mod billboard;
 mod collision;
 mod combine;
@@ -18,6 +19,7 @@ mod component_adder;
 mod direction;
 mod enemy;
 mod football;
+mod level_over;
 mod game_controller;
 mod game_camera;
 mod game_state;
@@ -55,8 +57,10 @@ fn main() {
         .add_plugin(cutscene::CutscenePlugin)
         .add_plugin(asset_loading::AssetLoadingPlugin)
         .add_plugin(billboard::BillboardPlugin)
+        .add_plugin(splash::SplashPlugin)
         .add_plugin(component_adder::ComponentAdderPlugin)
         .add_plugin(enemy::EnemyPlugin)
+        .add_plugin(level_over::LevelOverPlugin)
         .add_plugin(football::FootballPlugin)
         .add_plugin(combine::CombinePlugin)
         .add_plugin(game_state::GameStatePlugin)
@@ -83,6 +87,8 @@ pub enum AppState {
     Debug,
     TitleScreen,
     InGame,
+    Splash,
+    LevelOver,
     ResetInGame,
     Loading,
 }
@@ -97,13 +103,16 @@ fn bootstrap(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
     mut cutscene_state: ResMut<cutscene::CutsceneState>,
+    game_state: ResMut<game_state::GameState>,
 ) {
     cutscene_state.init(cutscene::Cutscene::Intro);
-    assets_handler.load(AppState::InGame, &mut game_assets);
+//    assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
+    assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
 }
 
 fn debug(
     keys: Res<Input<KeyCode>>, 
+    game_state: ResMut<game_state::GameState>,
     mut exit: ResMut<Events<AppExit>>,
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
@@ -118,7 +127,7 @@ fn debug(
     }
 
     if keys.just_pressed(KeyCode::R) {
-        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+        assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
     }
 
     if keys.just_pressed(KeyCode::F) {
@@ -194,4 +203,3 @@ impl ZeroSignum for Vec3 {
         Vec3::new(convert(self.x), convert(self.y), convert(self.z))
     }
 }
-

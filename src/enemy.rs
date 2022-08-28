@@ -85,7 +85,10 @@ fn handle_spawn_enemies_event(
     game_state: Res<game_state::GameState>,
 ) {
     for event in spawn_enemies_event_reader.iter() {
-        let enemy_count = 3;
+        let enemy_count = match game_state.current_round {
+            1 => 5,
+            _ => 3
+        };
 
         if let Some(gltf) = assets_gltf.get(&game_assets.enemy.clone()) {
             for _ in 0..enemy_count {

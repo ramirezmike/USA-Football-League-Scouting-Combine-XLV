@@ -45,13 +45,15 @@ pub struct CleanupMarker;
 fn reset_ingame(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<GameAssets>,
+    mut game_state: ResMut<game_state::GameState>,
 ) {
-    assets_handler.load(AppState::InGame, &mut game_assets);
+    assets_handler.load(AppState::InGame, &mut game_assets, &mut game_state);
 }
 
 pub fn load(
     assets_handler: &mut asset_loading::AssetsHandler,
     game_assets: &mut ResMut<GameAssets>,
+    game_state: &ResMut<game_state::GameState>,
 ) {
     assets_handler.add_glb(&mut game_assets.person, "models/person.glb");
     assets_handler.add_animation(&mut game_assets.person_idle,"models/person.glb#Animation1");
@@ -60,7 +62,13 @@ pub fn load(
     assets_handler.add_glb(&mut game_assets.enemy, "models/enemy.glb");
     assets_handler.add_glb(&mut game_assets.combine, "models/combine.glb");
     assets_handler.add_animation(&mut game_assets.combine_drive,"models/combine.glb#Animation0");
-    assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb");
+
+
+    match game_state.current_round {
+        1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
+        _ => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
+    }
+
     assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn.glb");
     assets_handler.add_glb(&mut game_assets.football, "models/football.glb");
     assets_handler.add_standard_mesh(&mut game_assets.blood_mesh, Mesh::from(shape::Plane::default()));

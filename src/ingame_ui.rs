@@ -68,7 +68,7 @@ fn setup(
             parent
                 .spawn_bundle(NodeBundle {
                     style: Style {
-                        size: Size::new(Val::Percent(50.0), Val::Px(scale * ingame::RENDER_TEXTURE_SIZE as f32)),
+                        size: Size::new(Val::Percent(200.0), Val::Px(scale * ingame::RENDER_TEXTURE_SIZE as f32)),
                         margin: UiRect {
                             left: Val::Px(scale * ingame::RENDER_TEXTURE_SIZE as f32),
                             ..default()
@@ -192,6 +192,7 @@ impl TextBox {
                 None
             } else {
                 let next_text = texts.remove(0);
+                self.current_animation = Handle::<AnimationClip>::default();
                 Some(next_text)
             }
         } else {
@@ -235,16 +236,16 @@ fn display_textbox(
     if textbox.after_text_displayed_cooldown > 0.0 { return; }
 
     if still_displaying_last_text {
-        if textbox.queued_text.is_some() {
-            // clear out existing text
-            for (_, children) in text_container.iter() {
-                if let Some(children) = children {
-                    for entity in children.iter() {
-                        commands.entity(*entity).despawn_recursive();
-                    }
+        // clear out existing text
+        textbox.cooldown = 0.0;
+        for (_, children) in text_container.iter() {
+            if let Some(children) = children {
+                for entity in children.iter() {
+                    commands.entity(*entity).despawn_recursive();
                 }
             }
-        } else {
+        }
+        if !textbox.queued_text.is_some() {
             // stop displaying textbox
             *textbox = TextBox::default();
             for mut visibility in &mut textbox_containers {

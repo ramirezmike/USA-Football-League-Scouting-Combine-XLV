@@ -73,27 +73,41 @@ fn generate_banter(game_assets: &GameAssets) -> Vec::<Banter> {
     vec!(
         Banter {
             texts: vec!(
-                bill_talk("ha ha ha", &game_assets),
+                bill_talk("I just realized our names rhyme", &game_assets),
+                will_talk("Yeah...", &game_assets),
+                bill_talk("Do you think that's why we're here?", &game_assets),
+                will_silent("...", &game_assets),
+            )
+        },
+        Banter {
+            texts: vec!(
+                bill_talk("Who does your mustache?", &game_assets),
+                will_talk("d..does?", &game_assets),
+                bill_talk("Yeah, like, where do you go?", &game_assets),
+                will_talk("I trim my own mustache actually.", &game_assets),
+                bill_talk("Like, with scissors?", &game_assets),
+                will_talk("I have an electric razor.", &game_assets),
+                bill_talk("that's cool.", &game_assets),
             )
         }
     )
 }
 
-fn will_talk_l(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
+fn will_talk(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
     ingame_ui::TextBoxText {
         text: text.to_string(),
-        speed: 1.01,
+        speed: 0.3,
         character: ingame_ui::DisplayCharacter::Will,
         animation_clip: game_assets.host_look_left_talk.clone(),
         after_text_displayed_delay: 1.0,
     }
 }
-fn will_talk(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
+fn will_silent(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
     ingame_ui::TextBoxText {
         text: text.to_string(),
-        speed: 1.01,
+        speed: 0.3,
         character: ingame_ui::DisplayCharacter::Will,
-        animation_clip: game_assets.host_talk.clone(),
+        animation_clip: game_assets.host_idle.clone(),
         after_text_displayed_delay: 1.0,
     }
 }
@@ -101,7 +115,7 @@ fn will_talk(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
 fn bill_talk(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
     ingame_ui::TextBoxText {
         text: text.to_string(),
-        speed: 1.01,
+        speed: 0.3,
         character: ingame_ui::DisplayCharacter::Bill,
         animation_clip: game_assets.host_talk.clone(),
         after_text_displayed_delay: 1.0,
@@ -110,7 +124,7 @@ fn bill_talk(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
 fn bill_talk_r(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
     ingame_ui::TextBoxText {
         text: text.to_string(),
-        speed: 1.01,
+        speed: 0.3,
         character: ingame_ui::DisplayCharacter::Bill,
         animation_clip: game_assets.host_look_right_talk.clone(),
         after_text_displayed_delay: 1.0,
@@ -118,8 +132,6 @@ fn bill_talk_r(text: &str, game_assets: &GameAssets) -> ingame_ui::TextBoxText {
 }
 
 /*
-   our names rhyme
-   mustaches
    I LIKE CORN kid
    weather
    what are we going to do with all this corn

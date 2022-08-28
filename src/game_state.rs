@@ -26,6 +26,7 @@ pub struct GameState {
     pub enemies_spawned: bool,
     pub corn_spawned: bool,
     pub death_count: usize,
+    pub current_round: usize
 }
 
 impl GameState {
@@ -38,6 +39,7 @@ impl GameState {
             touchdown_on_leftside: false,
             corn_spawned: false,
             enemies_spawned: false,
+            current_round: 0,
             death_count: 0,
         }
     }
@@ -53,6 +55,7 @@ impl Default for GameState {
             maze_size: 80.0,
             corn_spawned: false,
             death_count: 0,
+            current_round: 0,
             touchdown_on_leftside: false,
         }
     }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{
     AppState, maze::CornStalk, assets::GameAssets, component_adder::AnimationLink, maze,
-    collision, game_state, ZeroSignum, football, player, enemy,
+    collision, game_state, ZeroSignum, football, player, enemy, cutscene,
 };
 use bevy::render::primitives::Aabb;
 use rand::thread_rng;
@@ -170,6 +170,7 @@ fn harvest_corn(
     corns: Query<(&CornStalk, &Transform)>,
     game_state: Res<game_state::GameState>,
     time: Res<Time>,
+    mut cutscene_state: ResMut<cutscene::CutsceneState>,
 ) {
     for (mut combine, mut combine_transform) in &mut combines {
         match combine.heading {
@@ -184,7 +185,7 @@ fn harvest_corn(
 
                     if unharvested_corn.is_empty() {
                         println!("no more corn :(");
-                        // end of round?
+                        cutscene_state.init(cutscene::Cutscene::RoundOneOver);
                     }
 
                     let corn_transform = unharvested_corn.choose(&mut rng).map(|(_, t)| *t);

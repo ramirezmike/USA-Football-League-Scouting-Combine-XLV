@@ -1,6 +1,6 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, game_controller, AppState, shaders,
-    audio::GameAudio, menus, ui::text_size, 
+    audio::GameAudio, menus, ui::text_size, game_state,
 };
 use bevy::app::AppExit;
 use bevy::ecs::event::Events;
@@ -268,6 +268,7 @@ fn update_menu_buttons(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<GameAssets>,
     mut audio: GameAudio,
+    mut game_state: ResMut<game_state::GameState>,
 ) {
     let action_state = action_state.single();
     let number_of_buttons = buttons.iter().count();
@@ -300,7 +301,7 @@ fn update_menu_buttons(
     if pressed_button {
         if *selected_button == 0 {
             audio.play_sfx(&game_assets.blip);
-            assets_handler.load(AppState::InGame, &mut game_assets);
+            assets_handler.load(AppState::InGame, &mut game_assets, &mut game_state);
         }
         if *selected_button == 1 {
             exit.send(AppExit);

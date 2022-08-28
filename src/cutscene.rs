@@ -76,6 +76,8 @@ pub enum Cutscene {
     Intro,
     Death,
     Tackle,
+    LevelTwoIntro,
+    RoundOneOver,
 }
 
 impl Default for Cutscene {
@@ -128,6 +130,32 @@ fn play_cutscene(
 
     if let Some(current) = cutscene_state.current {
         match current {
+            Cutscene::LevelTwoIntro => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(22.5, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Round 2!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        game_state.corn_spawned = true;
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
+                    }
+                }
+            },
             Cutscene::Intro => {
                 match cutscene_state.cutscene_index {
                     0 => {
@@ -694,7 +722,7 @@ fn play_cutscene(
                                                     game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                         game_state.corn_spawned = true;
                         cutscene_state.current = None;
-                        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                        assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
                     }
                 }
             },
@@ -720,7 +748,33 @@ fn play_cutscene(
                         camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                                     game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                         cutscene_state.current = None;
-                        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                        assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
+                    }
+                }
+            },
+            Cutscene::RoundOneOver => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Well! That's it for round one!".to_string(),
+                            speed: text_speed,
+                            auto: false
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::LevelOver, &mut game_assets, &game_state);
                     }
                 }
             },
@@ -802,7 +856,7 @@ fn play_cutscene(
                                 camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                                             game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                                 cutscene_state.current = None;
-                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
                             }
                         }
                     },
@@ -873,7 +927,7 @@ fn play_cutscene(
                                 camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                                             game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                                 cutscene_state.current = None;
-                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
                             }
                         }
                     },
@@ -899,7 +953,7 @@ fn play_cutscene(
                                 camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                                             game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                                 cutscene_state.current = None;
-                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
                             }
                         }
                     }
@@ -925,7 +979,7 @@ fn play_cutscene(
                                 camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                                             game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                                 cutscene_state.current = None;
-                                assets_handler.load(AppState::ResetInGame, &mut game_assets);
+                                assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
                             }
                         }
                     }
@@ -940,7 +994,7 @@ fn play_cutscene(
         camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
                                     game_camera::INGAME_CAMERA_ROTATION_ANGLE);
         cutscene_state.current = None;
-        assets_handler.load(AppState::ResetInGame, &mut game_assets);
+        assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
     }
 
     if let Some(will_animation) = will_animation {
