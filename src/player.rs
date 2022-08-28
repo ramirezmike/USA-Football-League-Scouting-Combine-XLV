@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football, ingame, billboard::Billboard, cutscene};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, LEFT_GOAL, RIGHT_GOAL, football, ingame, billboard::Billboard, cutscene, audio::GameAudio};
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
 use rand::Rng;
@@ -66,6 +66,8 @@ pub fn check_for_touchdown(
     game_state: Res<game_state::GameState>,
     mut touchdown_event_writer: EventWriter<game_state::TouchdownEvent>,
     mut carried_footballs: Query<(&football::CarriedFootball, &mut Visibility, &Parent)>,
+    mut game_assets: ResMut<GameAssets>,
+    mut audio: GameAudio,
 ) {
     for (player_entity, player_transform, mut player) in &mut players {
         if player.has_football 
@@ -73,6 +75,7 @@ pub fn check_for_touchdown(
          || (!game_state.touchdown_on_leftside && player_transform.translation.z >= RIGHT_GOAL)) {
             player.has_football = false;
             touchdown_event_writer.send(game_state::TouchdownEvent);
+            audio.play_sfx(&game_assets.touch_down);
             println!("Sending touch");
             for (_, mut visibility, parent) in &mut carried_footballs {
                 if player_entity == parent.get() {
@@ -107,6 +110,7 @@ pub fn move_player(
                 animation.set_speed(8.0);
             }
             player.is_tackled = true;
+            audio.play_sfx(&game_assets.tackle_sound);
             player.dead_cooldown = 1.2;
         }
         if player.is_dead || player.is_tackled { 

@@ -1,5 +1,5 @@
 use crate::{AppState, game_state, collision, assets::GameAssets, player::Player, ingame,
-LEFT_END, RIGHT_END, LEFT_GOAL, RIGHT_GOAL, BOTTOM_END, TOP_END, enemy};
+LEFT_END, RIGHT_END, LEFT_GOAL, RIGHT_GOAL, BOTTOM_END, TOP_END, enemy, audio::GameAudio};
 use bevy::prelude::*;
 use rand::Rng;
 use bevy::gltf::Gltf;
@@ -37,6 +37,8 @@ fn handle_launch_football_event(
     assets_gltf: Res<Assets<Gltf>>,
     mut game_state: ResMut<game_state::GameState>,
     mut spawn_enemies_event_writer: EventWriter<enemy::SpawnEnemiesEvent>,
+    mut game_assets: ResMut<GameAssets>,
+    mut audio: GameAudio,
 ) {
     for event in launch_football_event_reader.iter() {
         if let Some(gltf) = assets_gltf.get(&game_assets.football.clone()) {
@@ -62,6 +64,7 @@ fn handle_launch_football_event(
                 }
             }
 
+            audio.play_sfx(&game_assets.football_launch);
             commands.spawn_bundle(SceneBundle {
                         scene: gltf.scenes[0].clone(),
                         transform: {

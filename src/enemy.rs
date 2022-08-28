@@ -1,4 +1,4 @@
-use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, maze, player, LEFT_GOAL, RIGHT_GOAL, TOP_END, BOTTOM_END, ingame};
+use crate::{AppState, game_controller, direction, game_state, collision, assets::GameAssets, component_adder::AnimationLink, ZeroSignum, maze, player, LEFT_GOAL, RIGHT_GOAL, TOP_END, BOTTOM_END, ingame, audio::GameAudio};
 use bevy::prelude::*;
 use rand::Rng;
 use std::collections::HashMap;
@@ -312,6 +312,8 @@ fn move_enemy(
     mut game_state: ResMut<game_state::GameState>, 
     time: Res<Time>,
     game_assets: ResMut<GameAssets>,
+    mut game_assets: ResMut<GameAssets>,
+    mut audio: GameAudio,
 ) {
     for (mut enemy, mut enemy_transform, animation_link) in &mut enemies {
         if enemy.is_launched { continue; }
@@ -325,13 +327,14 @@ fn move_enemy(
         let player = player.single();
         if enemy.has_dived && player.translation.distance(enemy_transform.translation) < 0.75 {
             enemy.is_attached = true;
+            audio.play_sfx(&game_assets.attach);
             enemy.has_dived = false;
             game_state.attached_enemies += 1;
         }
 
         if enemy.is_attached {
             enemy_transform.translation = player.translation;
-            enemy_transform.rotation = enemy_transform.rotation.lerp(player.rotation, enemy.random);
+            enemy_transform.rotation = enemy_transform.rotation.lerp(player.rotation, 3.0 * enemy.random);
             continue;
         }
 
@@ -344,6 +347,7 @@ fn move_enemy(
 
             if player.translation.distance(enemy_transform.translation) < 3.0 {
                 enemy.has_dived = true;
+                audio.play_sfx(&game_assets.dive);
                 enemy.velocity = (player.translation - enemy_transform.translation).normalize() * 0.5 * speed;
                 if let Some(animation_entity) = animation_link.entity {
                     let mut animation = animations.get_mut(animation_entity).unwrap();
@@ -379,26 +383,27 @@ fn move_enemy(
                 enemy_transform.rotation = rotation;
             }
         } else {
-            enemy.patrol_time -= time.delta_seconds();
+//          enemy.patrol_time -= time.delta_seconds();
 
-            if enemy.patrol_time <= 0.0 {
-                if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.0) {
-                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.25);
-                    enemy_transform.translation.y += 0.01;
-                } else if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.25) {
-                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.50);
-                    enemy_transform.translation.x += 0.01;
-                } else if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.50){
-                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.75);
-                    enemy_transform.translation.y -= 0.01;
-                } else {
-                    enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.0);
-                    enemy_transform.translation.x -= 0.01;
-                }
+//          if enemy.patrol_time <= 0.0 {
+//              if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.0) {
+//                  enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.25);
+//                  enemy_transform.translation.y += 0.01;
+//              } else if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.25) {
+//                  enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.50);
+//                  enemy_transform.translation.x += 0.01;
+//              } else if enemy_transform.rotation == Quat::from_axis_angle(Vec3::Y, TAU * 0.50){
+//                  enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.75);
+//                  enemy_transform.translation.y -= 0.01;
+//              } else {
+//                  enemy_transform.rotation = Quat::from_axis_angle(Vec3::Y, TAU * 0.0);
+//                  enemy_transform.translation.x -= 0.01;
+//              }
 
-                enemy.patrol_time = 3.0 + enemy.random;
-            }
-            enemy.patrol_time = enemy.patrol_time.clamp(0.0, 10.0);
+//              enemy.patrol_time = 3.0 + enemy.random;
+//          }
+//          enemy.patrol_time = enemy.patrol_time.clamp(0.0, 10.0);
+            enemy_transform.rotation.rotate_y(time.delta_seconds() * (1.0 + enemy.random));
         }
 
         if enemy.has_dived { continue; };

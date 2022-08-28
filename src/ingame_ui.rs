@@ -1,6 +1,6 @@
 use crate::{
     assets::GameAssets, cleanup, game_state, menus, AppState, ui::text_size, ingame, other_persons,
-    component_adder::AnimationLink, game_camera, maze,
+    component_adder::AnimationLink, game_camera, maze, audio::GameAudio,
 };
 use bevy::prelude::*;
 use bevy::ui::UiColor;
@@ -270,6 +270,7 @@ pub enum DisplayCharacter {
 fn display_textbox(
     mut commands: Commands,
     game_assets: Res<GameAssets>,
+    mut audio: GameAudio,
     mut textbox: ResMut<TextBox>,
     mut text_container: Query<(Entity, Option::<&Children>), With<TextContainerMarker>>,
     mut textbox_containers: Query<&mut Visibility, With<OuterTextBoxContainer>>,
@@ -340,6 +341,7 @@ fn display_textbox(
                             } 
                         }
                     }
+                    audio.play_talk(&game_assets.will_speak);
                 },
                 DisplayCharacter::Bill => {
                     let mut host_sprite = host_sprite.single_mut();
@@ -359,6 +361,7 @@ fn display_textbox(
                             } 
                         }
                     }
+                    audio.play_talk(&game_assets.bill_speak);
                 }
             }
 

@@ -70,7 +70,7 @@ pub fn load(
     game_assets: &mut ResMut<GameAssets>,
 ) {
     assets_handler.add_audio(&mut game_assets.titlescreen, "audio/titlescreen.ogg");
-//  assets_handler.add_audio(&mut game_assets.blip, "audio/blip.wav");
+    assets_handler.add_audio(&mut game_assets.blip, "audio/blip.wav");
     assets_handler.add_font(&mut game_assets.font, "fonts/monogram.ttf");
     assets_handler.add_material(
         &mut game_assets.title_screen_background,
@@ -142,10 +142,6 @@ fn setup(
 //      })
 //      .insert(CleanupMarker);
 
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 1.00,
-    });
 
     commands
         .spawn_bundle(Camera3dBundle {

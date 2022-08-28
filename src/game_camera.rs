@@ -236,6 +236,7 @@ pub fn spawn_camera<T: Component + Clone>(
     commands.spawn_bundle(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
+//            illuminance: 10000.0,
             illuminance: 10000.0,
             shadow_projection: OrthographicProjection {
                 left: -HALF_SIZE,
@@ -250,7 +251,7 @@ pub fn spawn_camera<T: Component + Clone>(
             ..Default::default()
         },
         transform: Transform {
-            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            rotation: Quat::from_rotation_x(0.80 * TAU),
             ..Default::default()
         },
         ..Default::default()

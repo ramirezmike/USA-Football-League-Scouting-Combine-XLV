@@ -14,6 +14,7 @@ impl Plugin for AssetsPlugin {
 pub struct GameAssets {
     pub font: Handle<Font>,
     pub person: Handle<Gltf>,
+    pub person_blood: Handle<Gltf>,
     pub enemy: Handle<Gltf>,
     pub person_dive: Handle<AnimationClip>,
     pub person_run: Handle<AnimationClip>,
@@ -27,6 +28,16 @@ pub struct GameAssets {
     pub combine_drive: Handle<AnimationClip>,
 
     pub blip: Handle<AudioSource>,
+    pub touch_down: Handle<AudioSource>,
+    pub corn_harvest: Handle<AudioSource>,
+    pub dive: Handle<AudioSource>,
+    pub attach: Handle<AudioSource>,
+    pub will_speak: Handle<AudioSource>,
+    pub football_launch: Handle<AudioSource>,
+    pub tackle_sound: Handle<AudioSource>,
+    pub bounce: Handle<AudioSource>,
+    pub bill_speak: Handle<AudioSource>,
+    pub bgm_music: Handle<AudioSource>,
     pub titlescreen: Handle<AudioSource>,
 
     pub title_screen_background: asset_loading::GameTexture,

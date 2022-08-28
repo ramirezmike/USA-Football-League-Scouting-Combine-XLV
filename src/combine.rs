@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use crate::{
     AppState, maze::CornStalk, assets::GameAssets, component_adder::AnimationLink, maze,
-    collision, game_state, ZeroSignum, football, player, enemy, cutscene,
+    collision, game_state, ZeroSignum, football, player, enemy, cutscene, audio::GameAudio,
 };
 use bevy::render::primitives::Aabb;
 use rand::thread_rng;
@@ -70,6 +70,8 @@ fn handle_corn_collision(
     mut commands: Commands,
     mut corns: Query<(Entity, &mut CornStalk, &mut Transform), Without<Combine>>,
     combine_blades: Query<(&Transform, &CombineBlade, &Aabb, &GlobalTransform), Without<CornStalk>>,
+    mut game_assets: ResMut<GameAssets>,
+    mut audio: GameAudio,
 ) {
     for (blade_transform, blade, blade_aabb, blade_global_transform) in &combine_blades {
         let blade_global_matrix = blade_global_transform.compute_matrix();
@@ -96,6 +98,7 @@ fn handle_corn_collision(
                             shrink_time: 2.0,
                         })
                         .remove::<collision::Collidable>();
+                audio.play_sfx(&game_assets.harvest_corn);
             }
         }
     }
@@ -105,7 +108,7 @@ fn detect_blade_collisions(
     mut commands: Commands,
     mut other_entities: 
         ParamSet<(
-            Query<(Entity, &Transform), With<player::Player>>,
+            Query<(Entity, &Transform, &player::Player)>,
             Query<(Entity, &Transform, &enemy::Enemy)>,
             Query<(Entity, &Transform, &football::Football)>,
         )>,
@@ -120,7 +123,8 @@ fn detect_blade_collisions(
         let min: Vec3 = blade_aabb.min().into();
         let max: Vec3 = blade_aabb.max().into();
 
-        for (entity, player_transform) in &other_entities.p0() {
+        for (entity, player_transform, player) in &other_entities.p0() {
+            if player.is_dead { continue; }
             let player_translation = player_transform.translation;
             let player_inverse = blade_inverse_transform_matrix.transform_point3(player_translation);
 
@@ -131,6 +135,7 @@ fn detect_blade_collisions(
 
             if player_in_hitbox {
                 player_blade_event_writer.send(player::PlayerBladeEvent { entity });
+                audio.play_sfx(&game_assets.player_death);
             }
         }
 
@@ -149,6 +154,7 @@ fn detect_blade_collisions(
 
             if enemy_in_hitbox {
                 enemy_blade_event_writer.send(enemy::EnemyBladeEvent { entity });
+                audio.play_sfx(&game_assets.bounce);
             }
         }
 
@@ -168,6 +174,7 @@ fn detect_blade_collisions(
             if football_in_hitbox {
                 commands.entity(entity).despawn_recursive();
                 football_launch_event_writer.send(football::LaunchFootballEvent);
+                audio.play_sfx(&game_assets.football_pop);
             }
         }
     }

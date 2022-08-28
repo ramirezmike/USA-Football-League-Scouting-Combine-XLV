@@ -56,6 +56,7 @@ pub fn load(
     game_state: &ResMut<game_state::GameState>,
 ) {
     assets_handler.add_glb(&mut game_assets.person, "models/person.glb");
+    assets_handler.add_glb(&mut game_assets.person_blood, "models/person_blood.glb");
     assets_handler.add_animation(&mut game_assets.person_idle,"models/person.glb#Animation1");
     assets_handler.add_animation(&mut game_assets.person_run,"models/person.glb#Animation2");
     assets_handler.add_animation(&mut game_assets.person_dive,"models/person.glb#Animation0");
@@ -63,6 +64,19 @@ pub fn load(
     assets_handler.add_glb(&mut game_assets.combine, "models/combine.glb");
     assets_handler.add_animation(&mut game_assets.combine_drive,"models/combine.glb#Animation0");
 
+    assets_handler.add_audio(&mut game_assets.blip, "audio/blip.wav");
+    assets_handler.add_audio(&mut game_assets.touch_down, "audio/touch_down.wav");
+    assets_handler.add_audio(&mut game_assets.corn_harvest, "audio/corn_harvest.wav");
+    assets_handler.add_audio(&mut game_assets.dive, "audio/dive.wav");
+    assets_handler.add_audio(&mut game_assets.attach, "audio/attach.wav");
+    assets_handler.add_audio(&mut game_assets.will_speak, "audio/will_speak.wav");
+    assets_handler.add_audio(&mut game_assets.football_launch, "audio/football_launch.wav");
+    assets_handler.add_audio(&mut game_assets.tackle_sound, "audio/tackle_sound.wav");
+    assets_handler.add_audio(&mut game_assets.player_death, "audio/player_death.wav");
+    assets_handler.add_audio(&mut game_assets.bounce, "audio/bounce.wav");
+    assets_handler.add_audio(&mut game_assets.football_pop, "audio/football_pop.wav");
+    assets_handler.add_audio(&mut game_assets.bill_speak, "audio/bill_speak.wav");
+    assets_handler.add_audio(&mut game_assets.bgm_music, "audio/combine.ogg");
 
     match game_state.current_round {
         1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
@@ -161,7 +175,12 @@ pub fn setup(
         brightness: 0.50,
     });
 
-    if let Some(gltf) = assets_gltf.get(&game_assets.person.clone()) {
+    let person_gltf = if game_state.death_count > 0 {
+        assets_gltf.get(&game_assets.person_blood.clone())
+    } else {
+        assets_gltf.get(&game_assets.person.clone())
+    };
+    if let Some(gltf) = person_gltf {
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
                     transform: {
