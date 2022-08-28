@@ -3,6 +3,7 @@ use crate::{
     audio::GameAudio, menus, ui::text_size, game_state,
 };
 use bevy::app::AppExit;
+use bevy::core_pipeline::clear_color::ClearColorConfig;
 use bevy::ecs::event::Events;
 use bevy::prelude::*;
 use leafwing_input_manager::prelude::*;
@@ -69,7 +70,7 @@ pub fn load(
     assets_handler: &mut asset_loading::AssetsHandler,
     game_assets: &mut ResMut<GameAssets>,
 ) {
-    assets_handler.add_audio(&mut game_assets.titlescreen, "audio/titlescreen.ogg");
+    assets_handler.add_audio(&mut game_assets.titlescreen, "audio/football.ogg");
     assets_handler.add_audio(&mut game_assets.blip, "audio/blip.wav");
     assets_handler.add_font(&mut game_assets.font, "fonts/monogram.ttf");
     assets_handler.add_material(
@@ -91,8 +92,36 @@ fn setup(
     mut images: ResMut<Assets<Image>>,
     mut audio: GameAudio,
     mut texture_materials: ResMut<Assets<shaders::TextureMaterial>>,
+    mut clear_color: ResMut<ClearColor>,
     text_scaler: text_size::TextScaler,
 ) {
+    clear_color.0 = Color::hex("00068a").unwrap(); 
+    let image_height = 1280.0;
+    let scale = (text_scaler.window_size.height * 0.8) / image_height;
+    commands.spawn_bundle(Camera2dBundle {
+        camera_2d: Camera2d {
+            clear_color: ClearColorConfig::None,
+            ..default()
+        },
+        camera: Camera {
+            priority: 1,
+            ..default()
+        },
+        ..default()
+    })
+    .insert(CleanupMarker);
+      commands.spawn_bundle(SpriteBundle {
+          transform: {
+              let height = (text_scaler.window_size.height / 2.0) * 0.224;
+              let mut t = Transform::from_translation(Vec3::new(0.0, height, 0.0));
+              t.apply_non_uniform_scale(Vec3::new(scale, scale, scale));
+              t
+          },
+          texture: game_assets.title_screen_logo.image.clone(),
+          ..Default::default()
+        })
+        .insert(CleanupMarker);
+
     commands
         .spawn_bundle(InputManagerBundle {
             input_map: MenuAction::default_input_map(),
@@ -167,7 +196,7 @@ fn setup(
                 TextStyle {
                     font: game_assets.font.clone(),
                     font_size: text_scaler.scale(menus::BY_LINE_FONT_SIZE),
-                    color: Color::rgba(0.0, 0.0, 0.0, 1.0),
+                    color: Color::WHITE,
                 }
             ),
             ..Default::default()
@@ -215,7 +244,7 @@ fn setup(
                             TextStyle {
                                 font: game_assets.font.clone(),
                                 font_size: text_scaler.scale(menus::BUTTON_LABEL_FONT_SIZE),
-                                color: Color::rgb(0.0, 0.0, 0.0),
+                                color: Color::WHITE,
                             }
                         ),
                         ..Default::default()
@@ -243,7 +272,7 @@ fn setup(
                             TextStyle {
                                 font: game_assets.font.clone(),
                                 font_size: text_scaler.scale(menus::BUTTON_LABEL_FONT_SIZE),
-                                color: Color::rgb(0.0, 0.0, 0.0),
+                                color: Color::WHITE,
                             }
                         ),
                         ..Default::default()
@@ -252,7 +281,7 @@ fn setup(
                 .insert(CleanupMarker);
         });
 
-//    audio.play_bgm(&game_assets.titlescreen);
+    audio.play_bgm_once(&game_assets.titlescreen);
 }
 
 fn update_menu_buttons(

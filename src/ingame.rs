@@ -1,7 +1,7 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, collision, component_adder, game_camera,
     game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink,
-    combine, enemy, football, TOP_END, LEFT_GOAL, banter, cutscene
+    combine, enemy, football, TOP_END, RIGHT_GOAL, LEFT_GOAL, BOTTOM_END, LEFT_END, RIGHT_END, banter, cutscene
 };
 use std::f32::consts::{TAU, PI};
 use bevy::gltf::Gltf;
@@ -34,10 +34,21 @@ impl Plugin for InGamePlugin {
             SystemSet::on_update(AppState::InGame)
               .with_system(game_camera::follow_player)
               .with_system(game_camera::pan_orbit_camera)
+              .with_system(light_sway)
               .with_system(game_camera::handle_will_camera),
         );
     }
 }
+fn light_sway(
+    player: Query<&Transform, (With<player::Player>, Without<SpotLight>)>,
+    mut query: Query<(&mut Transform, &mut SpotLight)>
+) {
+    for (mut transform, mut angles) in query.iter_mut() {
+        let player = player.single();
+        *transform = transform.looking_at(player.translation, Vec3::Y);
+    }
+}
+
 
 #[derive(Component, Copy, Clone)]
 pub struct CleanupMarker;
@@ -169,10 +180,82 @@ pub fn setup(
     game_state.attached_enemies = 0;
     game_state.enemies_spawned = false;
     game_state.touchdown_on_leftside = false;
-    commands.insert_resource(AmbientLight {
-        color: Color::WHITE,
-        brightness: 0.50,
-    });
+
+    match game_state.current_round {
+        1 => {
+            // lights
+            commands.insert_resource(AmbientLight {
+                color: Color::WHITE,
+                brightness: 0.50,
+            });
+            const HALF_SIZE: f32 = 100.0;
+            commands.spawn_bundle(DirectionalLightBundle {
+                directional_light: DirectionalLight {
+                    // Configure the projection to better fit the scene
+        //            illuminance: 10000.0,
+                    illuminance: 10000.0,
+                    shadow_projection: OrthographicProjection {
+                        left: -HALF_SIZE,
+                        right: HALF_SIZE,
+                        bottom: -HALF_SIZE,
+                        top: HALF_SIZE,
+                        near: -10.0 * HALF_SIZE,
+                        far: 10.0 * HALF_SIZE,
+                        ..Default::default()
+                    },
+                    shadows_enabled: true,
+                    ..Default::default()
+                },
+                transform: Transform {
+                    rotation: Quat::from_rotation_x(0.80 * TAU),
+                    ..Default::default()
+                },
+                ..Default::default()
+            })
+            .insert(CleanupMarker);
+        },
+        2 => {
+        },
+        _ => {
+            // lights
+            commands.insert_resource(AmbientLight {
+                color: Color::ALICE_BLUE,
+                brightness: 0.02,
+            });
+            commands
+                .spawn_bundle(SpotLightBundle {
+                    transform: Transform::from_xyz(0.0, 15.0, RIGHT_GOAL)
+                        .looking_at(Vec3::new(0.0, 0.0, LEFT_GOAL), Vec3::Y),
+                    spot_light: SpotLight {
+                        intensity: 10000.0, // lumens
+                        color: Color::WHITE,
+                        range: 77.0,
+                        shadows_enabled: true,
+                        shadow_depth_bias: 10.0,
+                        inner_angle: 0.1,
+                        outer_angle: 0.2,
+                        ..default()
+                    },
+                    ..default()
+                });
+            commands
+                .spawn_bundle(SpotLightBundle {
+                    transform: Transform::from_xyz(0.0, 15.0, LEFT_GOAL)
+                        .looking_at(Vec3::new(0.0, 0.0, LEFT_GOAL), Vec3::Y),
+                    spot_light: SpotLight {
+                        intensity: 10000.0, // lumens
+                        color: Color::WHITE,
+                        range: 77.0,
+                        shadows_enabled: true,
+                        shadow_depth_bias: 10.0,
+                        inner_angle: 0.1,
+                        outer_angle: 0.2,
+                        ..default()
+                    },
+                    ..default()
+                });
+        }
+    }
 
     let person_gltf = if game_state.death_count > 0 {
         assets_gltf.get(&game_assets.person_blood.clone())

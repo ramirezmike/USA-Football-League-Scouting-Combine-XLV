@@ -231,31 +231,5 @@ pub fn spawn_camera<T: Component + Clone>(
     })
     .insert(cleanup_marker.clone());
 //    .insert(first_pass_layer);
-
-    const HALF_SIZE: f32 = 100.0;
-    commands.spawn_bundle(DirectionalLightBundle {
-        directional_light: DirectionalLight {
-            // Configure the projection to better fit the scene
-//            illuminance: 10000.0,
-            illuminance: 10000.0,
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
-                ..Default::default()
-            },
-            shadows_enabled: true,
-            ..Default::default()
-        },
-        transform: Transform {
-            rotation: Quat::from_rotation_x(0.80 * TAU),
-            ..Default::default()
-        },
-        ..Default::default()
-    })
-    .insert(cleanup_marker);
 }
 

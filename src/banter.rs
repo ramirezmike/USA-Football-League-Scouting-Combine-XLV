@@ -32,7 +32,7 @@ pub struct Banter {
     pub texts: Vec::<ingame_ui::TextBoxText>,
 }
 
-const BANTER_COOLDOWN: f32 = 1.0;
+const BANTER_COOLDOWN: f32 = 5.0;
 
 fn send_banter(
     mut banter_state: ResMut<BanterState>,

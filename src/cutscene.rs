@@ -1,7 +1,7 @@
 use crate::{
     assets::GameAssets, cleanup, game_state, menus, AppState, ui::text_size, ingame, other_persons,
     component_adder::AnimationLink, game_camera, ingame_ui, title_screen::MenuAction, LEFT_GOAL, football,
-    asset_loading, audio::GameAudio,
+    asset_loading, audio::GameAudio, 
 };
 use std::mem;
 use bevy::prelude::*;
@@ -75,7 +75,10 @@ pub enum Cutscene {
     Death,
     Tackle,
     LevelTwoIntro,
+    LevelThreeIntro,
     RoundOneOver,
+    RoundTwoOver,
+    RoundThreeOver,
 }
 
 impl Default for Cutscene {
@@ -100,6 +103,7 @@ fn play_cutscene(
     mut bill_animation_link: Query<&AnimationLink, With<other_persons::BillPerson>>,
     mut animations: Query<&mut AnimationPlayer>,
     mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
+    mut ingame_ui_textbox: ResMut<ingame_ui::TextBox>,
     mut audio: GameAudio,
 ) {
     if let Ok(will_link_check) = will_animation_link.get_single() {
@@ -128,6 +132,7 @@ fn play_cutscene(
     let text_speed = 0.10;
 
     if let Some(current) = cutscene_state.current {
+        *ingame_ui_textbox = ingame_ui::TextBox::default(); // clear out any banter or commentary
         match current {
             Cutscene::LevelTwoIntro => {
                 match cutscene_state.cutscene_index {
@@ -138,6 +143,35 @@ fn play_cutscene(
                         cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
                         textbox.queued_text = Some(TextBoxText {
                             text: "Round 2!".to_string(),
+                            speed: text_speed,
+                                    auto: false,
+                                    speaking: DisplayCharacter::Bill,
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        audio.play_bgm(&game_assets.bgm);
+                        game_state.corn_spawned = true;
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::ResetInGame, &mut game_assets, &game_state);
+                    }
+                }
+            },
+            Cutscene::LevelThreeIntro => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(22.5, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        audio.stop_bgm();
+                        cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Round 3!".to_string(),
                             speed: text_speed,
                                     auto: false,
                                     speaking: DisplayCharacter::Bill,
@@ -186,7 +220,7 @@ fn play_cutscene(
                     },
                     2 => {
                         textbox.queued_text = Some(TextBoxText {
-                            text: "and we're here live from the AFL Scouting Combine XLV in Indianapolis!".to_string(),
+                            text: "and we're here live from the USAFL Scouting Combine XLV in Indianapolis!".to_string(),
                             speed: text_speed,
                                     auto: false,
                                     speaking: DisplayCharacter::Bill,
@@ -823,6 +857,62 @@ fn play_cutscene(
                         cutscene_state.target_camera_rotation = None;
                         textbox.queued_text = Some(TextBoxText {
                             text: "Well! That's it for round one!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::LevelOver, &mut game_assets, &game_state);
+                    }
+                }
+            },
+            Cutscene::RoundTwoOver => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        audio.stop_bgm();
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Well! That's it for round two!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    _ => {
+                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
+                                                       game_camera::INGAME_CAMERA_Y, 
+                                                       LEFT_GOAL);
+                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
+                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
+                        cutscene_state.current = None;
+                        assets_handler.load(AppState::LevelOver, &mut game_assets, &game_state);
+                    }
+                }
+            },
+            Cutscene::RoundThreeOver => {
+                match cutscene_state.cutscene_index {
+                    0 => {
+                        camera.translation = Vec3::new(19.3, 1.5, 0.0);
+                        camera.rotation = Quat::from_axis_angle(Vec3::new(-0.034182332, -0.9987495, -0.03648749), 1.5735247);
+                        audio.stop_bgm();
+                        cutscene_state.target_camera_translation = None;
+                        cutscene_state.target_camera_rotation = None;
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Well! That's it for round three!".to_string(),
                             speed: text_speed,
                             auto: false,
                             speaking: DisplayCharacter::Bill,

@@ -121,7 +121,7 @@ fn handle_spawn_enemies_event(
                             ..Default::default()
                         }),
                         visibility: Visibility {
-                            is_visible: true 
+                            is_visible: false
                         },
                         transform: Transform::from_scale(Vec3::ZERO),
                         ..Default::default()
@@ -333,7 +333,7 @@ fn move_enemy(
 
         if enemy.is_attached {
             enemy_transform.translation = player.translation;
-            enemy_transform.rotation = enemy_transform.rotation.lerp(player.rotation, 3.0 * enemy.random);
+            enemy_transform.rotation = enemy_transform.rotation.lerp(player.rotation, 1.25 * enemy.random);
             continue;
         }
 

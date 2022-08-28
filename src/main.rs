@@ -110,8 +110,8 @@ fn bootstrap(
     cutscene_state.init(cutscene::Cutscene::Intro);
     banter_state.reset(&game_assets);
 
-//    assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
-      assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
+    assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
+//    assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
 }
 
 fn debug(
