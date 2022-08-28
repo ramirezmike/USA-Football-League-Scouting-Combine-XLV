@@ -32,6 +32,8 @@ pub struct GameAssets {
     pub corn_harvest: Handle<AudioSource>,
     pub dive: Handle<AudioSource>,
     pub attach: Handle<AudioSource>,
+    pub player_death: Handle<AudioSource>,
+    pub football_pop: Handle<AudioSource>,
     pub will_speak: Handle<AudioSource>,
     pub football_launch: Handle<AudioSource>,
     pub tackle_sound: Handle<AudioSource>,

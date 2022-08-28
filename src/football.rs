@@ -37,7 +37,6 @@ fn handle_launch_football_event(
     assets_gltf: Res<Assets<Gltf>>,
     mut game_state: ResMut<game_state::GameState>,
     mut spawn_enemies_event_writer: EventWriter<enemy::SpawnEnemiesEvent>,
-    mut game_assets: ResMut<GameAssets>,
     mut audio: GameAudio,
 ) {
     for event in launch_football_event_reader.iter() {

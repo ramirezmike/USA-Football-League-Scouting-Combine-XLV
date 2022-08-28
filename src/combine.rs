@@ -98,7 +98,7 @@ fn handle_corn_collision(
                             shrink_time: 2.0,
                         })
                         .remove::<collision::Collidable>();
-                audio.play_sfx(&game_assets.harvest_corn);
+                audio.play_sfx(&game_assets.corn_harvest);
             }
         }
     }
@@ -116,6 +116,8 @@ fn detect_blade_collisions(
     mut enemy_blade_event_writer: EventWriter<enemy::EnemyBladeEvent>,
     mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
     combine_blades: Query<(&Transform, &CombineBlade, &Aabb, &GlobalTransform), Without<CornStalk>>,
+    mut audio: GameAudio,
+    mut game_assets: ResMut<GameAssets>,
 ) {
     for (blade_transform, blade, blade_aabb, blade_global_transform) in &combine_blades {
         let blade_global_matrix = blade_global_transform.compute_matrix();

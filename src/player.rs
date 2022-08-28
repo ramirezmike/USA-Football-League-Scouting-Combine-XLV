@@ -94,6 +94,7 @@ pub fn move_player(
     collidables: collision::Collidables,
     mut game_state: ResMut<game_state::GameState>,
     game_assets: ResMut<GameAssets>,
+    mut audio: GameAudio,
     mut cutscene_state: ResMut<cutscene::CutsceneState>,
 ) {
     let mut move_events = HashMap::new();

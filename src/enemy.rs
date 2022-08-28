@@ -312,7 +312,6 @@ fn move_enemy(
     mut game_state: ResMut<game_state::GameState>, 
     time: Res<Time>,
     game_assets: ResMut<GameAssets>,
-    mut game_assets: ResMut<GameAssets>,
     mut audio: GameAudio,
 ) {
     for (mut enemy, mut enemy_transform, animation_link) in &mut enemies {
@@ -403,7 +402,7 @@ fn move_enemy(
 //              enemy.patrol_time = 3.0 + enemy.random;
 //          }
 //          enemy.patrol_time = enemy.patrol_time.clamp(0.0, 10.0);
-            enemy_transform.rotation.rotate_y(time.delta_seconds() * (1.0 + enemy.random));
+            enemy_transform.rotate_y(time.delta_seconds() * (1.0 + enemy.random));
         }
 
         if enemy.has_dived { continue; };
