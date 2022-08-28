@@ -1,6 +1,6 @@
 use crate::{
     assets::GameAssets, cleanup, game_state, menus, AppState, ui::text_size, ingame, other_persons,
-    component_adder::AnimationLink, game_camera,
+    component_adder::AnimationLink, game_camera, maze,
 };
 use bevy::prelude::*;
 use bevy::ui::UiColor;
@@ -35,10 +35,15 @@ pub struct CleanupMarker;
 
 fn update_ui(
     game_state: Res<game_state::GameState>,
-    mut score_indicators: Query<&mut Text, With<ScoreIndicator>>,
+    mut score_indicators: Query<&mut Text, (With<ScoreIndicator>, Without<CornIndicator>)>,
+    mut corn_indicators: Query<&mut Text, (With<CornIndicator>, Without<ScoreIndicator>)>,
+    corn_stalks: Query<Entity, With<maze::CornStalk>>
 ) {
     for mut text in score_indicators.iter_mut() {
         text.sections[0].value = game_state.score.to_string();
+    }
+    for mut text in corn_indicators.iter_mut() {
+        text.sections[0].value = corn_stalks.iter().len().to_string();
     }
 }
 
@@ -106,33 +111,75 @@ fn setup(
                         position_type: PositionType::Relative,
                         justify_content: JustifyContent::FlexEnd,
                         align_items: AlignItems::FlexEnd,
-                        flex_direction: FlexDirection::Row,
+                        flex_direction: FlexDirection::ColumnReverse,
                         ..Default::default()
                     },
                     color: Color::NONE.into(),
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    add_title(
-                        parent,
-                        game_assets.font.clone(),
-                        text_scaler.scale(menus::DEFAULT_FONT_SIZE * 0.8),
-                        "0",
-                        vec!(ScoreIndicator), // just an empty vec since can't do <impl Trait>
-                    );
-                    add_title(
-                        parent,
-                        game_assets.font.clone(),
-                        text_scaler.scale(menus::DEFAULT_FONT_SIZE * 0.8),
-                        "Pts",
-                        Vec::<ingame::CleanupMarker>::new(), // just an empty vec since can't do <impl Trait>
-                    );
+                    parent.spawn_bundle(NodeBundle {
+                        style: Style {
+                            size: Size::new(Val::Percent(100.0), Val::Percent(50.0)),
+                            position_type: PositionType::Relative,
+                            justify_content: JustifyContent::FlexEnd,
+                            align_items: AlignItems::FlexEnd,
+                            flex_direction: FlexDirection::Row,
+                            ..Default::default()
+                        },
+                        color: Color::NONE.into(),
+                        ..Default::default()
+                    })
+                    .with_children(|parent| {
+                        add_title(
+                            parent,
+                            game_assets.font.clone(),
+                            text_scaler.scale(menus::DEFAULT_FONT_SIZE * 0.8),
+                            "0",
+                            vec!(ScoreIndicator), // just an empty vec since can't do <impl Trait>
+                        );
+                        add_title(
+                            parent,
+                            game_assets.font.clone(),
+                            text_scaler.scale(menus::DEFAULT_FONT_SIZE * 0.8),
+                            "Pts ",
+                            Vec::<ingame::CleanupMarker>::new(), // just an empty vec since can't do <impl Trait>
+                        );
+                    });
+                    parent.spawn_bundle(NodeBundle {
+                        style: Style {
+                            size: Size::new(Val::Percent(100.0), Val::Percent(50.0)),
+                            position_type: PositionType::Relative,
+                            justify_content: JustifyContent::FlexEnd,
+                            align_items: AlignItems::FlexEnd,
+                            flex_direction: FlexDirection::Row,
+                            ..Default::default()
+                        },
+                        color: Color::NONE.into(),
+                        ..Default::default()
+                    })
+                    .with_children(|parent| {
+                        add_title(
+                            parent,
+                            game_assets.font.clone(),
+                            text_scaler.scale(menus::DEFAULT_FONT_SIZE * 0.8),
+                            "0",
+                            vec!(CornIndicator),
+                        );
+                        add_title(
+                            parent,
+                            game_assets.font.clone(),
+                            text_scaler.scale(menus::DEFAULT_FONT_SIZE * 0.8),
+                            "Corn",
+                            Vec::<ingame::CleanupMarker>::new(), // just an empty vec since can't do <impl Trait>
+                        );
+                    });
                 });
 
         });
 
 
-      let first_pass_layer = RenderLayers::layer(1);
+//      let first_pass_layer = RenderLayers::layer(1);
       let scale = (text_scaler.window_size.width * 0.1) / ingame::RENDER_TEXTURE_SIZE as f32;
       let sprite_x = -(text_scaler.window_size.width / 2.0) + (ingame::RENDER_TEXTURE_SIZE as f32 / 2.0 * scale);
       let sprite_y = (text_scaler.window_size.height / 2.0) - (ingame::RENDER_TEXTURE_SIZE as f32 / 2.0 * scale);
@@ -149,15 +196,18 @@ fn setup(
           visibility: Visibility {
               is_visible: false
           },
-          texture: game_assets.will_camera.clone().into(),
+          texture: game_assets.bill_icon.image.clone(),
           ..Default::default()
         })
+        .insert(HostSpriteMarker)
         .insert(OuterTextBoxContainer)
         .insert(ingame::CleanupMarker)
-        .insert(CleanupMarker)
-        .insert(first_pass_layer) ;
+        .insert(CleanupMarker);
+//        .insert(first_pass_layer) ;
 }
 
+#[derive(Component)]
+pub struct HostSpriteMarker;
 #[derive(Component)]
 struct TextContainerMarker;
 #[derive(Component)]
@@ -227,6 +277,7 @@ fn display_textbox(
     mut bill_animation_link: Query<&AnimationLink, With<other_persons::BillPerson>>,
     mut animations: Query<&mut AnimationPlayer>,
     mut host_camera: Query<(&mut Transform, &game_camera::HostCamera)>,
+    mut host_sprite: Query<&mut Handle<Image>, With<HostSpriteMarker>>,
     text_scaler: text_size::TextScaler,
     time: Res<Time>,
 ) {
@@ -272,6 +323,9 @@ fn display_textbox(
 
             match current_text.character {
                 DisplayCharacter::Will => {
+                    let mut host_sprite = host_sprite.single_mut();
+                    *host_sprite = game_assets.will_icon.image.clone(); 
+
                     for (mut transform, _) in &mut host_camera {
                         transform.translation.z = WILL_POSITION;
                     }
@@ -288,6 +342,9 @@ fn display_textbox(
                     }
                 },
                 DisplayCharacter::Bill => {
+                    let mut host_sprite = host_sprite.single_mut();
+                    *host_sprite = game_assets.bill_icon.image.clone(); 
+
                     for (mut transform, _) in &mut host_camera {
                         transform.translation.z = BILL_POSITION;
                     }
@@ -375,6 +432,8 @@ fn handle_textbox_events(
 
 #[derive(Component)]
 struct ScoreIndicator;
+#[derive(Component)]
+struct CornIndicator;
 
 pub fn add_title(
     builder: &mut ChildBuilder<'_, '_, '_>,

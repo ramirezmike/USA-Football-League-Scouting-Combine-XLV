@@ -167,30 +167,30 @@ pub fn spawn_camera<T: Component + Clone>(
 ) {
     let radius = translation.length();
 
-    let first_pass_layer = RenderLayers::layer(1);
-    // Will Camera
-    commands.spawn_bundle(Camera3dBundle {
-        transform: {
-            let mut t = Transform::from_xyz(21.5, 2.0, 1.0);
-            t.rotation = Quat::from_rotation_y(TAU * 0.75);
-            t
-        },
-        camera: Camera {
-            priority: -1,
-            target: RenderTarget::Image(game_assets.will_camera.clone()),
-            ..default()
-        },
-        camera_3d: Camera3d {
-            clear_color: ClearColorConfig::Default,
-            ..default()
-        },
-        ..default()
-    })
-    .insert(UiCameraConfig {
-        show_ui: false,
-    })
-    .insert(HostCamera)
-    .insert(cleanup_marker.clone());
+//  let first_pass_layer = RenderLayers::layer(1);
+//  // Will Camera
+//  commands.spawn_bundle(Camera3dBundle {
+//      transform: {
+//          let mut t = Transform::from_xyz(21.5, 2.0, 1.0);
+//          t.rotation = Quat::from_rotation_y(TAU * 0.75);
+//          t
+//      },
+//      camera: Camera {
+//          priority: -1,
+//          target: RenderTarget::Image(game_assets.will_camera.clone()),
+//          ..default()
+//      },
+//      camera_3d: Camera3d {
+//          clear_color: ClearColorConfig::Default,
+//          ..default()
+//      },
+//      ..default()
+//  })
+//  .insert(UiCameraConfig {
+//      show_ui: false,
+//  })
+//  .insert(HostCamera)
+//  .insert(cleanup_marker.clone());
 
     println!("Spawning camera");
     commands.spawn_bundle(Camera3dBundle {
@@ -229,8 +229,8 @@ pub fn spawn_camera<T: Component + Clone>(
         },
         ..default()
     })
-    .insert(cleanup_marker.clone())
-    .insert(first_pass_layer);
+    .insert(cleanup_marker.clone());
+//    .insert(first_pass_layer);
 
     const HALF_SIZE: f32 = 100.0;
     commands.spawn_bundle(DirectionalLightBundle {

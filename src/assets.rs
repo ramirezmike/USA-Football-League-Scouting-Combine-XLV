@@ -32,6 +32,8 @@ pub struct GameAssets {
     pub title_screen_background: asset_loading::GameTexture,
     pub title_screen_logo: asset_loading::GameTexture,
     pub bevy_icon: asset_loading::GameTexture,
+    pub bill_icon: asset_loading::GameTexture,
+    pub will_icon: asset_loading::GameTexture,
 
     pub blood: asset_loading::GameTexture,
     pub blood_mesh: Handle<Mesh>,

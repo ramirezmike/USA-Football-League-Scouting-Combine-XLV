@@ -65,9 +65,12 @@ pub fn load(
 
 
     match game_state.current_round {
-        1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
-        _ => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
+        1 => assets_handler.add_glb(&mut game_assets.maze, "models/maze.glb"),
+        _ => assets_handler.add_glb(&mut game_assets.maze, "models/maze_01.glb"),
     }
+
+    assets_handler.add_material(&mut game_assets.bill_icon, "textures/bill.png", true);
+    assets_handler.add_material(&mut game_assets.will_icon, "textures/will.png", true);
 
     assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn.glb");
     assets_handler.add_glb(&mut game_assets.football, "models/football.glb");

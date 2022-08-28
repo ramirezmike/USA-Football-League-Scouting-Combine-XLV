@@ -32,7 +32,7 @@ pub struct Banter {
     pub texts: Vec::<ingame_ui::TextBoxText>,
 }
 
-const BANTER_COOLDOWN: f32 = 5.0;
+const BANTER_COOLDOWN: f32 = 1.0;
 
 fn send_banter(
     mut banter_state: ResMut<BanterState>,
@@ -63,10 +63,12 @@ fn send_banter(
 
     let random = rng.gen_range(0..banter_state.banters.len()) as usize;
     let selected_banter = banter_state.banters.swap_remove(random);
+    println!("banters left: {}", banter_state.banters.len());
 
     textbox_event_writer.send(ingame_ui::SetTextBoxEvent {
         texts: selected_banter.texts.to_vec()
     });
+    banter_state.cooldown = BANTER_COOLDOWN;
 }
 
 fn generate_banter(game_assets: &GameAssets) -> Vec::<Banter> {

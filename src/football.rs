@@ -20,7 +20,7 @@ impl Plugin for FootballPlugin {
 
 #[derive(Component)]
 pub struct Football {
-    has_landed: bool,
+    pub has_landed: bool,
     target: Vec3,
     starting_position: Vec3,
     current_movement_time: f32,
@@ -86,7 +86,7 @@ fn handle_launch_football_event(
     }
 }
 
-const FOOTBALL_PICKUP_DISTANCE: f32 = 0.7;
+const FOOTBALL_PICKUP_DISTANCE: f32 = 1.5;
 fn check_for_football_pickup(
     mut commands: Commands,
     footballs: Query<(Entity, &Football, &Transform)>,

@@ -100,47 +100,47 @@ fn setup(
         })
         .insert(CleanupMarker);
 
-    commands
-        .spawn_bundle(MaterialMeshBundle {
-            transform: {
-                let mut transform = Transform::from_scale(Vec3::splat(10.0));
-                transform.translation.z = 0.1;
+//  commands
+//      .spawn_bundle(MaterialMeshBundle {
+//          transform: {
+//              let mut transform = Transform::from_scale(Vec3::splat(10.0));
+//              transform.translation.z = 0.1;
 
-                transform
-            },
-            material: texture_materials.add(shaders::TextureMaterial {
-                env_texture: Some(game_assets.title_screen_logo.image.clone()),
-                color: Color::rgb(1.0, 1.0, 1.0),
-                time: 0.0,
-                x_scroll_speed: 0.1,
-                y_scroll_speed: 0.4,
-                scale: 0.2,
-            }),
-            mesh: meshes.add(Mesh::from(shape::Plane::default())),
-            ..Default::default()
-        })
-        .insert(CleanupMarker);
+//              transform
+//          },
+//          material: texture_materials.add(shaders::TextureMaterial {
+//              env_texture: Some(game_assets.title_screen_logo.image.clone()),
+//              color: Color::rgb(1.0, 1.0, 1.0),
+//              time: 0.0,
+//              x_scroll_speed: 0.1,
+//              y_scroll_speed: 0.4,
+//              scale: 0.2,
+//          }),
+//          mesh: meshes.add(Mesh::from(shape::Plane::default())),
+//          ..Default::default()
+//      })
+//      .insert(CleanupMarker);
 
-    commands
-        .spawn_bundle(MaterialMeshBundle {
-            transform: {
-                let mut transform = Transform::from_scale(Vec3::splat(12.0));
-                transform.translation.z = 0.4;
+//  commands
+//      .spawn_bundle(MaterialMeshBundle {
+//          transform: {
+//              let mut transform = Transform::from_scale(Vec3::splat(12.0));
+//              transform.translation.z = 0.4;
 
-                transform
-            },
-            material: texture_materials.add(shaders::TextureMaterial {
-                env_texture: Some(game_assets.title_screen_logo.image.clone()),
-                color: Color::rgb(1.0, 1.0, 1.0),
-                time: 0.0,
-                x_scroll_speed: 0.2,
-                y_scroll_speed: 0.5,
-                scale: 0.3,
-            }),
-            mesh: meshes.add(Mesh::from(shape::Plane::default())),
-            ..Default::default()
-        })
-        .insert(CleanupMarker);
+//              transform
+//          },
+//          material: texture_materials.add(shaders::TextureMaterial {
+//              env_texture: Some(game_assets.title_screen_logo.image.clone()),
+//              color: Color::rgb(1.0, 1.0, 1.0),
+//              time: 0.0,
+//              x_scroll_speed: 0.2,
+//              y_scroll_speed: 0.5,
+//              scale: 0.3,
+//          }),
+//          mesh: meshes.add(Mesh::from(shape::Plane::default())),
+//          ..Default::default()
+//      })
+//      .insert(CleanupMarker);
 
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,

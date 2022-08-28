@@ -52,7 +52,7 @@ impl Default for Combine {
         Combine {
             animation_set: false,
             velocity: Vec3::default(),
-            speed: 20.0,
+            speed: 30.0,
             current_rotation_time: 0.0,
             heading: Heading::Left,
             target_rotation: Quat::from_rotation_y(TAU * 0.25),
@@ -106,8 +106,8 @@ fn detect_blade_collisions(
     mut other_entities: 
         ParamSet<(
             Query<(Entity, &Transform), With<player::Player>>,
-            Query<(Entity, &Transform), With<enemy::Enemy>>,
-            Query<(Entity, &Transform), With<football::Football>>,
+            Query<(Entity, &Transform, &enemy::Enemy)>,
+            Query<(Entity, &Transform, &football::Football)>,
         )>,
     mut player_blade_event_writer: EventWriter<player::PlayerBladeEvent>, 
     mut enemy_blade_event_writer: EventWriter<enemy::EnemyBladeEvent>,
@@ -134,7 +134,11 @@ fn detect_blade_collisions(
             }
         }
 
-        for (entity, enemy_transform) in &other_entities.p1() {
+        for (entity, enemy_transform, enemy) in &other_entities.p1() {
+            if enemy.is_launched {
+                continue;
+            }
+
             let enemy_translation = enemy_transform.translation;
             let enemy_inverse = blade_inverse_transform_matrix.transform_point3(enemy_translation);
 
@@ -148,7 +152,11 @@ fn detect_blade_collisions(
             }
         }
 
-        for (entity, football_transform) in &other_entities.p2() {
+        for (entity, football_transform, football) in &other_entities.p2() {
+            if !football.has_landed {
+                continue;
+            }
+
             let football_translation = football_transform.translation;
             let football_inverse = blade_inverse_transform_matrix.transform_point3(football_translation);
 

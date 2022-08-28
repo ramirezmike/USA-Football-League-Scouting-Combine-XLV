@@ -38,11 +38,12 @@ impl Plugin for MazePlugin {
 }
 
 fn shrink_corn( 
-    mut corns: Query<(&mut Transform, &mut ShrinkCorn, &AnimationLink)>,
+    mut commands: Commands,
+    mut corns: Query<(Entity, &mut Transform, &mut ShrinkCorn, &AnimationLink)>,
     mut animations: Query<&mut AnimationPlayer>,
     time: Res<Time>,
 ) {
-    for (mut transform, mut shrink_corn, animation_link) in &mut corns {
+    for (entity, mut transform, mut shrink_corn, animation_link) in &mut corns {
         shrink_corn.shrink_time -= time.delta_seconds();
         shrink_corn.shrink_time.clamp(0.0, 10.0);
 
@@ -52,6 +53,7 @@ fn shrink_corn(
             if let Some(animation_entity) = animation_link.entity {
                 if let Ok(mut animation) = animations.get_mut(animation_entity) {
                     animation.pause();
+                    commands.entity(entity).despawn_recursive();
                 }
             }
         } else {
@@ -91,7 +93,7 @@ fn spawn_corn(
     game_assets: Res<GameAssets>,
     mut component_adder: ResMut<ComponentAdder>,
 ) {
-    let maze_thickness = 1.0;
+    let maze_thickness = 1.5;
     let corn_height = 80.0;
     let corn_thickness = 0.8;
 

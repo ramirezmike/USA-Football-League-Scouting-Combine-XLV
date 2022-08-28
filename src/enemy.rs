@@ -51,7 +51,7 @@ impl Enemy {
             line_of_sight,
             can_see_player: false,
             velocity: Vec3::default(),
-            speed: 30.0,
+            speed: 42.0,
             rotation_speed: 1.0,
             friction: 0.01,
             patrol_time: 0.0,
@@ -228,7 +228,7 @@ fn scale_lines_of_sight(
     let unharvested_corn = corns.iter()
                                 .filter(|(c, _)| !c.is_harvested)
                                 .collect::<Vec::<_>>();
-    let LOS_LENGTH = 10.0;
+    let LOS_LENGTH = 25.0;
     for (mut enemy, enemy_transform) in &mut enemies {
         if let Ok((mut line_of_sight, los_aabb, los_global_transform)) = lines_of_sight.get_mut(enemy.line_of_sight) {
             let los_global_matrix = los_global_transform.compute_matrix();

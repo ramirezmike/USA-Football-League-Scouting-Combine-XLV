@@ -50,7 +50,7 @@ fn main() {
 //      .add_plugin(LogDiagnosticsPlugin::default())
 //      .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
-        .add_plugin(WorldInspectorPlugin::new())
+//        .add_plugin(WorldInspectorPlugin::new())
         .add_plugin(audio::GameAudioPlugin)
         .add_plugin(assets::AssetsPlugin)
         .add_plugin(banter::BanterPlugin)
@@ -107,7 +107,7 @@ fn bootstrap(
 ) {
     cutscene_state.init(cutscene::Cutscene::Intro);
 //    assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
-    assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
+      assets_handler.load(AppState::InGame, &mut game_assets, &game_state);
 }
 
 fn debug(
