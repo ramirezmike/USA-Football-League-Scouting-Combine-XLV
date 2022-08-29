@@ -76,7 +76,7 @@ fn main() {
         .add_plugin(ui::text_size::TextSizePlugin)
         .add_state(AppState::Initial)
         .add_system_set(SystemSet::on_update(AppState::Initial).with_system(bootstrap))
-        .add_system(debug)
+//        .add_system(debug)
         .run();
 }
 

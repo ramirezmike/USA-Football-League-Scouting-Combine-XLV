@@ -37,7 +37,7 @@ impl Plugin for InGamePlugin {
         .add_system_set(
             SystemSet::on_update(AppState::InGame)
               .with_system(game_camera::follow_player)
-              .with_system(game_camera::pan_orbit_camera)
+//              .with_system(game_camera::pan_orbit_camera)
               .with_system(spotlight_follow_player)
               .with_system(game_camera::handle_will_camera),
         );
