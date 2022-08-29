@@ -80,7 +80,7 @@ fn main() {
         .add_system(window_settings)
         .add_state(AppState::Initial)
         .add_system_set(SystemSet::on_update(AppState::Initial).with_system(bootstrap))
-        .add_system(debug)
+//        .add_system(debug)
         .run();
 }
 

@@ -11,14 +11,15 @@ impl Plugin for WasmPlugin {
 #[cfg(target_arch = "wasm32")]
 fn fullscreen(mut windows: ResMut<Windows>) {
     if let Some(window) = windows.get_primary_mut() {
-        let document_element = web_sys::window()
-                                .map(|w| w.document())
-                                .map(|d| d.document_element());
-        if let Some(document_element) = document_element {
-            window.set_resolution(
-                document_element.client_width() as f32,
-                document_element.client_height() as f32,
-            );
+        if let Some(web_window) = web_sys::window() {
+            if let Some(document) = web_window.document() {
+                if let Some(document_element) = document.document_element() {
+                    window.set_resolution(
+                        document_element.client_width() as f32,
+                        document_element.client_height() as f32,
+                    );
+                }
+            }
         }
     }
 }
