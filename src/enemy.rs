@@ -87,6 +87,7 @@ fn handle_spawn_enemies_event(
     for event in spawn_enemies_event_reader.iter() {
         let enemy_count = match game_state.current_round {
             1 => 5,
+            2 => 6,
             _ => 3
         };
 

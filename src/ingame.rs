@@ -109,7 +109,12 @@ pub fn load(
     assets_handler.add_material(&mut game_assets.bill_icon, "textures/bill.png", true);
     assets_handler.add_material(&mut game_assets.will_icon, "textures/will.png", true);
 
-    assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn.glb");
+    if game_state.graphics_high {
+        assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn.glb");
+    } else {
+        assets_handler.add_glb(&mut game_assets.corn_stalk, "models/corn_low.glb");
+    }
+
     assets_handler.add_glb(&mut game_assets.football, "models/football.glb");
     assets_handler.add_standard_mesh(&mut game_assets.blood_mesh, Mesh::from(shape::Plane::default()));
     assets_handler.add_animation(&mut game_assets.corn_sway,"models/corn.glb#Animation0");
@@ -188,6 +193,7 @@ pub fn setup(
     mut camera: Query<&mut Transform, With<game_camera::PanOrbitCamera>>,
 ) {
     println!("Setting up ingame!");
+    game_state.title_screen_cooldown = 1.0;
     game_state.attached_enemies = 0;
     game_state.enemies_spawned = false;
     game_state.touchdown_on_leftside = false;
@@ -215,7 +221,7 @@ pub fn setup(
                         far: 10.0 * HALF_SIZE,
                         ..Default::default()
                     },
-                    shadows_enabled: true,
+                    shadows_enabled: game_state.shadows_on,
                     ..Default::default()
                 },
                 transform: Transform {
@@ -240,14 +246,15 @@ pub fn setup(
                         intensity: 10000.0, // lumens
                         color: Color::WHITE,
                         range: 77.0,
-                        shadows_enabled: true,
+                        shadows_enabled: game_state.shadows_on,
                         shadow_depth_bias: 10.0,
                         inner_angle: 0.1,
                         outer_angle: 0.2,
                         ..default()
                     },
                     ..default()
-                });
+                })
+                .insert(CleanupMarker);
             commands
                 .spawn_bundle(SpotLightBundle {
                     transform: Transform::from_xyz(0.0, 15.0, LEFT_GOAL)
@@ -256,14 +263,15 @@ pub fn setup(
                         intensity: 10000.0, // lumens
                         color: Color::WHITE,
                         range: 77.0,
-                        shadows_enabled: true,
+                        shadows_enabled: game_state.shadows_on,
                         shadow_depth_bias: 10.0,
                         inner_angle: 0.1,
                         outer_angle: 0.2,
                         ..default()
                     },
                     ..default()
-                });
+                })
+                .insert(CleanupMarker);
         },
         _ => {
             // lights
@@ -286,7 +294,7 @@ pub fn setup(
                         far: 10.0 * HALF_SIZE,
                         ..Default::default()
                     },
-                    shadows_enabled: true,
+                    shadows_enabled: game_state.shadows_on,
                     ..Default::default()
                 },
                 transform: Transform {
@@ -390,12 +398,6 @@ pub fn setup(
     }
 
     component_adder.reset();
-
-    if game_state.music_on {
-//        audio.play_bgm(&game_assets.game_music);
-    } else {
-        audio.stop_bgm();
-    }
 
     if cutscene_state.current.is_none() {
         if camera.iter().len() == 0 {

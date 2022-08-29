@@ -91,9 +91,10 @@ fn spawn_corn(
     mut maze_planes: Query<(&mut MazeMarker, &mut Visibility)>,
     assets_gltf: Res<Assets<Gltf>>,
     game_assets: Res<GameAssets>,
+    game_state: Res<game_state::GameState>,
     mut component_adder: ResMut<ComponentAdder>,
 ) {
-    let maze_thickness = 1.5;
+    let maze_thickness = if game_state.graphics_high { 0.8 } else { 1.5 };
     let corn_height = 80.0;
     let corn_thickness = 0.8;
 

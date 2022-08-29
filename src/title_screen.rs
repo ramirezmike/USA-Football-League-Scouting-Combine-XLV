@@ -1,6 +1,6 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, game_controller, AppState, shaders,
-    audio::GameAudio, menus, ui::text_size, game_state,
+    audio::GameAudio, menus, ui::text_size, game_state, cutscene, banter,
 };
 use bevy::app::AppExit;
 use bevy::core_pipeline::clear_color::ClearColorConfig;
@@ -88,8 +88,13 @@ fn setup(
     mut audio: GameAudio,
     mut texture_materials: ResMut<Assets<shaders::TextureMaterial>>,
     mut clear_color: ResMut<ClearColor>,
+    mut banter_state: ResMut<banter::BanterState>,
+    mut cutscene_state: ResMut<cutscene::CutsceneState>,
     text_scaler: text_size::TextScaler,
 ) {
+    cutscene_state.init(cutscene::Cutscene::Intro);
+    banter_state.reset(&game_assets);
+
     clear_color.0 = Color::hex("00068a").unwrap(); 
     let image_height = 1280.0;
     let scale = (text_scaler.window_size.height * 0.8) / image_height;
@@ -289,7 +294,15 @@ fn update_menu_buttons(
     mut game_assets: ResMut<GameAssets>,
     mut audio: GameAudio,
     mut game_state: ResMut<game_state::GameState>,
+    time: Res<Time>,
 ) {
+    game_state.title_screen_cooldown -= time.delta_seconds();
+    game_state.title_screen_cooldown = game_state.title_screen_cooldown.clamp(-3.0, 30.0);
+
+    if game_state.title_screen_cooldown > 0.0 {
+        return;
+    }
+
     let action_state = action_state.single();
     let number_of_buttons = buttons.iter().count();
     let mut pressed_button = action_state.pressed(MenuAction::Select);
@@ -321,7 +334,7 @@ fn update_menu_buttons(
     if pressed_button {
         if *selected_button == 0 {
             audio.play_sfx(&game_assets.blip);
-            assets_handler.load(AppState::InGame, &mut game_assets, &mut game_state);
+            assets_handler.load(AppState::Options, &mut game_assets, &mut game_state);
         }
         if *selected_button == 1 {
             exit.send(AppExit);

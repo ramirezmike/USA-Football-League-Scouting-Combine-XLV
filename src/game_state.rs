@@ -19,10 +19,12 @@ pub struct LevelOverCleanupMarker;
 
 pub struct GameState {
     pub score: usize,
-    pub music_on: bool,
+    pub shadows_on: bool,
+    pub graphics_high: bool, 
     pub maze_size: f32,
     pub touchdown_on_leftside: bool,
     pub attached_enemies: usize,
+    pub title_screen_cooldown: f32,
     pub enemies_spawned: bool,
     pub corn_spawned: bool,
     pub death_count: usize,
@@ -30,14 +32,16 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initialize(music_on: bool) -> Self {
+    pub fn initialize(graphics: bool, shadows_on: bool) -> Self {
         GameState {
             score: 0,
-            music_on: music_on,
+            shadows_on: shadows_on, 
+            graphics_high: graphics, 
             attached_enemies: 0, 
             maze_size: 80.0,
             touchdown_on_leftside: false,
             corn_spawned: false,
+            title_screen_cooldown: 1.0,
             enemies_spawned: false,
             current_round: 0,
             death_count: 0,
@@ -49,11 +53,13 @@ impl Default for GameState {
     fn default() -> Self {
         GameState {
             score: 0,
-            music_on: true,
+            shadows_on: true,
+            graphics_high: true, 
             attached_enemies: 0, 
             enemies_spawned: false,
             maze_size: 80.0,
             corn_spawned: false,
+            title_screen_cooldown: 1.0,
             death_count: 0,
             current_round: 0,
             touchdown_on_leftside: false,

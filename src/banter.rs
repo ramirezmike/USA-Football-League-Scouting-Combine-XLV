@@ -32,7 +32,7 @@ pub struct Banter {
     pub texts: Vec::<ingame_ui::TextBoxText>,
 }
 
-const BANTER_COOLDOWN: f32 = 5.0;
+const BANTER_COOLDOWN: f32 = 10.0;
 
 fn send_banter(
     mut banter_state: ResMut<BanterState>,
@@ -83,7 +83,7 @@ fn generate_banter(game_assets: &GameAssets) -> Vec::<Banter> {
         },
         Banter {
             texts: vec!(
-                bill_talk("We really lucked out with the weather today.", &game_assets),
+                bill_talk("Lucky it's great weather today.", &game_assets),
                 bill_talk("It can get pretty chilly in December.", &game_assets),
                 will_talk("Bill... it's August.", &game_assets),
                 bill_talk("Yeah, but what if it wasn't?", &game_assets),

@@ -28,6 +28,7 @@ mod ingame_ui;
 mod maze;
 mod menus;
 mod player;
+mod options;
 mod other_persons;
 mod title_screen;
 mod shaders;
@@ -59,6 +60,7 @@ fn main() {
         .add_plugin(splash::SplashPlugin)
         .add_plugin(component_adder::ComponentAdderPlugin)
         .add_plugin(enemy::EnemyPlugin)
+        .add_plugin(options::OptionsMenuPlugin)
         .add_plugin(level_over::LevelOverPlugin)
         .add_plugin(football::FootballPlugin)
         .add_plugin(combine::CombinePlugin)
@@ -85,6 +87,7 @@ pub enum AppState {
     Cutscene,
     Debug,
     TitleScreen,
+    Options,
     InGame,
     Splash,
     LevelOver,
@@ -101,15 +104,12 @@ pub fn cleanup<T: Component>(mut commands: Commands, entities: Query<Entity, Wit
 fn bootstrap(
     mut assets_handler: asset_loading::AssetsHandler,
     mut game_assets: ResMut<assets::GameAssets>,
-    mut cutscene_state: ResMut<cutscene::CutsceneState>,
     game_state: ResMut<game_state::GameState>,
-    mut banter_state: ResMut<banter::BanterState>,
+    mut clear_color: ResMut<ClearColor>,
     mut audio: audio::GameAudio,
 ) {
-    // TODO: move this to title screen
-    cutscene_state.init(cutscene::Cutscene::Intro);
-    banter_state.reset(&game_assets);
     audio.set_volume();
+    clear_color.0 = Color::hex("000000").unwrap(); 
 
     assets_handler.load(AppState::Splash, &mut game_assets, &game_state);
 //    assets_handler.load(AppState::InGame, &mut game_assets, &game_state);

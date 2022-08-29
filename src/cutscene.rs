@@ -9,7 +9,6 @@ use rand::Rng;
 use leafwing_input_manager::prelude::ActionState;
 use leafwing_input_manager::InputManagerBundle;
 
-
 pub struct CutscenePlugin;
 impl Plugin for CutscenePlugin {
     fn build(&self, app: &mut App) {
@@ -142,11 +141,55 @@ fn play_cutscene(
                         audio.stop_bgm();
                         cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
                         textbox.queued_text = Some(TextBoxText {
-                            text: "Round 2!".to_string(),
+                            text: "Welcome back!".to_string(),
                             speed: text_speed,
-                                    auto: false,
-                                    speaking: DisplayCharacter::Bill,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
                         });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    1 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The field is ready for the next round and so are we!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    2 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "FOUR HOURS".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    3 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Yeah, we ran into some difficulties.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_left_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    4 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "But, we're ready now. We have popcorn. Let's get started!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
                         bill_animation = Some(game_assets.host_talk.clone()); 
                         will_animation = Some(game_assets.host_idle.clone()); 
                     },
@@ -164,7 +207,6 @@ fn play_cutscene(
                 }
             },
             Cutscene::LevelThreeIntro => {
-                println!("in level 3 intro {}", cutscene_state.cutscene_index);
                 match cutscene_state.cutscene_index {
                     0 => {
                         camera.translation = Vec3::new(22.5, 1.5, 0.0);
@@ -172,11 +214,165 @@ fn play_cutscene(
                         audio.stop_bgm();
                         cutscene_state.target_camera_translation = Some((Vec3::new(19.3, 1.5, 0.0)));
                         textbox.queued_text = Some(TextBoxText {
-                            text: "Round 3!".to_string(),
+                            text: "And we're back!".to_string(),
                             speed: text_speed,
                                     auto: false,
                                     speaking: DisplayCharacter::Bill,
                         });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    1 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "As you can tell, it's quite late.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    2 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We are keeping warm while eating our elotes.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    3 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I'm having esquites!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    4 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "That's the same thing".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    5 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "it really isn't.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    6 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Anyway!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    7 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We've been cited by the city for the stadium lights being lit after midnight.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_right.clone()); 
+                    },
+                    8 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We've made an agreement that if we're quiet, we can use two flood lights.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    9 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Players will have to navigate the maze in the dark.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    10 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "They'll be illuminated only by the lights tracking them.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    11 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Dealing with these last-minute adjustments is part of the challenge!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    12 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Will, what do you think?".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    13 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I can't see anything.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
+                    14 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Fantastic! Let's begin!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
                         bill_animation = Some(game_assets.host_talk.clone()); 
                         will_animation = Some(game_assets.host_idle.clone()); 
                     },
@@ -271,7 +467,7 @@ fn play_cutscene(
                     },
                     7 => {
                         textbox.queued_text = Some(TextBoxText {
-                            text: "The AFL Scouting Combine is an annual, week-long showcase where athletes perform mental and physical trials to potentially be drafted on an AFL team.".to_string(),
+                            text: "The USAFL Scouting Combine is an annual, week-long showcase where athletes perform mental and physical trials to potentially be drafted on an AFL team.".to_string(),
                             speed: text_speed,
                                     auto: false,
                                     speaking: DisplayCharacter::Will,
@@ -518,7 +714,7 @@ fn play_cutscene(
                         camera.rotation = Quat::from_axis_angle(Vec3::new(-0.50110954, -0.84660023, -0.17932819), 0.78708464);
                         cutscene_state.camera_speed = 0.2;
                         textbox.queued_text = Some(TextBoxText {
-                            text: "In the maze, we have seasoned AFL players ready to chase and tackle the player.".to_string(),
+                            text: "In the maze, we have seasoned USAFL players ready to chase and tackle the player.".to_string(),
                             speed: text_speed,
                                     auto: false,
                                     speaking: DisplayCharacter::Bill,
@@ -865,6 +1061,86 @@ fn play_cutscene(
                         bill_animation = Some(game_assets.host_talk.clone()); 
                         will_animation = Some(game_assets.host_idle.clone()); 
                     },
+                    1 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "That was a great performance.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+                        bill_animation = Some(game_assets.host_idle.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
+                    2 => {
+                        if game_state.score == 0 {
+                            textbox.queued_text = Some(TextBoxText {
+                                text: "Yeah.. no touch downs though..".to_string(),
+                                speed: text_speed,
+                                auto: false,
+                                speaking: DisplayCharacter::Bill,
+                            });
+                        } else if game_state.score == 100 {
+                            textbox.queued_text = Some(TextBoxText {
+                                text: "It was only one, but it was a great touchdown.".to_string(),
+                                speed: text_speed,
+                                auto: false,
+                                speaking: DisplayCharacter::Bill,
+                            });
+                        } else {
+                            textbox.queued_text = Some(TextBoxText {
+                                text: "Always great to see a couple touchdowns.".to_string(),
+                                speed: text_speed,
+                                auto: false,
+                                speaking: DisplayCharacter::Bill,
+                            });
+                        }
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    3 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The volunteers are taking to the field now to re-plant.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    4 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Hey uh... how long until the field is ready?".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    5 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "... should only take a couple hours tops.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    6 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "WHAT".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
                     _ => {
                         camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
                                                        game_camera::INGAME_CAMERA_Y, 
@@ -885,11 +1161,66 @@ fn play_cutscene(
                         cutscene_state.target_camera_translation = None;
                         cutscene_state.target_camera_rotation = None;
                         textbox.queued_text = Some(TextBoxText {
-                            text: "Well! That's it for round two!".to_string(),
+                            text: "Wooooo! This is how football was always meant to be!".to_string(),
                             speed: text_speed,
                             auto: false,
                             speaking: DisplayCharacter::Bill,
                         });
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    1 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Yeah, I have to admit, that was very exciting.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    2 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Very exciting.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    3 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Well uhh.. I guess we have to replant now..".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    4 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Yeah...".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    5 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We'll be back after the break!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
                         bill_animation = Some(game_assets.host_talk.clone()); 
                         will_animation = Some(game_assets.host_idle.clone()); 
                     },
@@ -913,21 +1244,182 @@ fn play_cutscene(
                         cutscene_state.target_camera_translation = None;
                         cutscene_state.target_camera_rotation = None;
                         textbox.queued_text = Some(TextBoxText {
-                            text: "Well! That's it for round three!".to_string(),
+                            text: "What time is it?".to_string(),
                             speed: text_speed,
                             auto: false,
                             speaking: DisplayCharacter::Bill,
                         });
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    1 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "It's 3:37am".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    2 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Are these taking longer? We got through three rounds today.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    3 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Yeah, we had to send all the other players home early.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    4 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "The scouts didn't even stay for this last round.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    5 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I.. I don't think this is the best event for the Combine.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    6 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "No.. it didn't go quite as planned.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    7 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We did get a lot of corn out of it though.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    8 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "...".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::None,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    9 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I like corn, Will.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right_talk.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    10 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "I know.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left_talk.clone()); 
+                    },
+                    11 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "...".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::None,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_look_left.clone()); 
+                    },
+                    12 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Anyway! If you're still out there, thanks for sticking around.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
                         bill_animation = Some(game_assets.host_talk.clone()); 
                         will_animation = Some(game_assets.host_idle.clone()); 
                     },
+                    13 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "We're going to have some internal meetings to tweak this event.".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    14 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "Join us again next time for more USA Football League Scouting Combine coverage!".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Bill,
+                        });
+
+                        bill_animation = Some(game_assets.host_talk.clone()); 
+                        will_animation = Some(game_assets.host_idle.clone()); 
+                    },
+                    15 => {
+                        textbox.queued_text = Some(TextBoxText {
+                            text: "What a mess".to_string(),
+                            speed: text_speed,
+                            auto: false,
+                            speaking: DisplayCharacter::Will,
+                        });
+
+                        bill_animation = Some(game_assets.host_look_right.clone()); 
+                        will_animation = Some(game_assets.host_talk.clone()); 
+                    },
                     _ => {
-                        camera.translation = Vec3::new(game_camera::INGAME_CAMERA_X, 
-                                                       game_camera::INGAME_CAMERA_Y, 
-                                                       LEFT_GOAL);
-                        camera.rotation = Quat::from_axis_angle(game_camera::INGAME_CAMERA_ROTATION_AXIS, 
-                                                    game_camera::INGAME_CAMERA_ROTATION_ANGLE);
                         cutscene_state.current = None;
+                        *game_state = game_state::GameState::default();
                         assets_handler.load(AppState::TitleScreen, &mut game_assets, &game_state);
                     }
                 }
