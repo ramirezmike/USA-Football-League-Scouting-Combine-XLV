@@ -467,7 +467,7 @@ fn play_cutscene(
                     },
                     7 => {
                         textbox.queued_text = Some(TextBoxText {
-                            text: "The USAFL Scouting Combine is an annual, week-long showcase where athletes perform mental and physical trials to potentially be drafted on an AFL team.".to_string(),
+                            text: "The USAFL Scouting Combine is an annual, week-long showcase where athletes perform mental and physical trials to potentially be drafted on an USAFL team.".to_string(),
                             speed: text_speed,
                                     auto: false,
                                     speaking: DisplayCharacter::Will,
