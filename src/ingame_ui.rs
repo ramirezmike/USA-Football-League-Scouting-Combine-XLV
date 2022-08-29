@@ -98,7 +98,7 @@ fn setup(
                                 overflow: Overflow::Hidden,
                                 ..Default::default()
                             },
-                            color: Color::rgb(0.15, 0.15, 0.15).into(),
+                            color: Color::hex("2d3b95").unwrap().into(),
                             ..Default::default()
                         })
                         .insert(TextContainerMarker);

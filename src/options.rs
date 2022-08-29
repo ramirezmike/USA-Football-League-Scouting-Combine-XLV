@@ -25,7 +25,7 @@ impl Plugin for OptionsMenuPlugin {
                 .with_system(
                     handle_controllers
                         .label("handle_input")
-                        .after("store_controller_inputs"),
+                        .after(game_controller::store_controller_inputs),
                 ),
         )
         .add_system_set(

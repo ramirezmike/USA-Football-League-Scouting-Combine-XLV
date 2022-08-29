@@ -3,6 +3,7 @@
 use bevy::prelude::*;
 use bevy::asset::AssetServerSettings;
 use bevy::app::AppExit;
+use bevy::window::WindowMode;
 use bevy_inspector_egui::WorldInspectorPlugin;
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 
@@ -33,6 +34,7 @@ mod other_persons;
 mod title_screen;
 mod shaders;
 mod ui;
+mod wasm;
 
 const LEFT_GOAL:f32 = -38.5;
 const RIGHT_GOAL:f32 = 37.5;
@@ -74,10 +76,19 @@ fn main() {
         .add_plugin(title_screen::TitlePlugin)
         .add_plugin(player::PlayerPlugin)
         .add_plugin(ui::text_size::TextSizePlugin)
+        .add_plugin(wasm::WasmPlugin)
+        .add_system(window_settings)
         .add_state(AppState::Initial)
         .add_system_set(SystemSet::on_update(AppState::Initial).with_system(bootstrap))
-//        .add_system(debug)
+        .add_system(debug)
         .run();
+}
+
+fn window_settings(mut windows: ResMut<Windows>){
+    for mut window in windows.iter_mut() {
+        window.set_title(String::from("USAFL Scouting Combine XLV"));
+        window.set_mode(WindowMode::BorderlessFullscreen)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]

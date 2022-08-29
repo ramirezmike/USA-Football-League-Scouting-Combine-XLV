@@ -1,11 +1,13 @@
 use crate::{
     asset_loading, assets::GameAssets, cleanup, collision, component_adder, game_camera,
-    game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink,
+    game_state, player, AppState, audio::GameAudio, component_adder::AnimationLink, maze,
     combine, enemy, football, TOP_END, RIGHT_GOAL, LEFT_GOAL, BOTTOM_END, LEFT_END, RIGHT_END, banter, cutscene
 };
 use std::f32::consts::{TAU, PI};
 use bevy::gltf::Gltf;
 use bevy::prelude::*;
+use rand::thread_rng;
+use rand::prelude::SliceRandom;
 use bevy::render::render_resource::{
     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
 };
@@ -191,6 +193,7 @@ pub fn setup(
     cutscene_state: Res<cutscene::CutsceneState>,
     mut football_launch_event_writer: EventWriter<football::LaunchFootballEvent>,
     mut camera: Query<&mut Transform, With<game_camera::PanOrbitCamera>>,
+    corn_stalks: Query<(&maze::CornStalk, &Transform), Without<game_camera::PanOrbitCamera>>,
 ) {
     println!("Setting up ingame!");
     game_state.title_screen_cooldown = 1.0;
@@ -372,10 +375,27 @@ pub fn setup(
     }
 
     if let Some(gltf) = assets_gltf.get(&game_assets.combine.clone()) {
+        let combine_position =
+            if game_state.corn_spawned && corn_stalks.iter().len() > 0 {
+                let unharvested_corn = corn_stalks.iter()
+                                                  .filter(|(c, _)| !c.is_harvested)
+                                                  .collect::<Vec::<_>>();
+                let mut rng = thread_rng();
+                let corn_transform = unharvested_corn.choose(&mut rng).map(|(_, t)| *t);
+                let starting_row =
+                    if let Some(corn_transform) = corn_transform  {
+                        corn_transform.translation.x
+                    } else {
+                        TOP_END * 0.5
+                    };
+                Transform::from_xyz(starting_row, 0.0, (game_state.maze_size / 2.0))
+            } else {
+                Transform::from_xyz(TOP_END * 0.5, 0.0, (game_state.maze_size / 2.0))
+            };
         commands.spawn_bundle(SceneBundle {
                     scene: gltf.scenes[0].clone(),
                     transform: {
-                        let mut t = Transform::from_xyz(TOP_END * 0.5, 0.0, (game_state.maze_size / 2.0));
+                        let mut t = combine_position;
                         t.rotate_y(TAU * 0.25);
                         t
                     },
