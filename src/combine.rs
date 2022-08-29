@@ -72,7 +72,12 @@ fn handle_corn_collision(
     combine_blades: Query<(&Transform, &CombineBlade, &Aabb, &GlobalTransform), Without<CornStalk>>,
     mut game_assets: ResMut<GameAssets>,
     mut audio: GameAudio,
+    mut sound_cooldown: Local<f32>,
+    time: Res<Time>,
 ) {
+    *sound_cooldown -= time.delta_seconds();
+    *sound_cooldown = sound_cooldown.clamp(-3.0, 3.0);
+
     for (blade_transform, blade, blade_aabb, blade_global_transform) in &combine_blades {
         let blade_global_matrix = blade_global_transform.compute_matrix();
         let blade_inverse_transform_matrix = blade_global_matrix.inverse();
@@ -98,7 +103,10 @@ fn handle_corn_collision(
                             shrink_time: 2.0,
                         })
                         .remove::<collision::Collidable>();
-                audio.play_sfx(&game_assets.corn_harvest);
+                if *sound_cooldown <= 0.0 {
+                    audio.play_sfx(&game_assets.corn_harvest);
+                    *sound_cooldown = 0.1;
+                }
             }
         }
     }

@@ -45,10 +45,10 @@ const TOP_END:f32 = 20.471;
 
 fn main() {
     App::new()
-        .insert_resource(AssetServerSettings {
-            watch_for_changes: true,
-            ..default()
-        })
+//      .insert_resource(AssetServerSettings {
+//          watch_for_changes: true,
+//          ..default()
+//      })
 //      .add_plugin(LogDiagnosticsPlugin::default())
 //      .add_plugin(FrameTimeDiagnosticsPlugin::default())
         .add_plugins(DefaultPlugins)
