@@ -1,6 +1,8 @@
 # USA Football League Scouting Combine XLV 
 
-An entry for the [2nd Bevy game jam][jam] following the theme of "combine." It was rated 1st place overall in the game jam. 
+An entry for the [2nd Bevy game jam][jam] following the theme of "combine." It was rated [**1st place** overall in the game jam][results]! 
+
+https://user-images.githubusercontent.com/1421719/190038928-25c7615d-9879-4a8d-a5f3-ab6f86e85ee3.mp4
 
 You can play the game [here][itch].
 
@@ -25,3 +27,4 @@ cargo r --features bevy/dynamic
 [submissions]: https://itch.io/jam/bevy-jam-2/entries 
 [othergames]: https://ramirezmike2.itch.io/
 [bevy-discord]: https://discord.gg/bevy
+[results]: https://itch.io/jam/bevy-jam-2/results
