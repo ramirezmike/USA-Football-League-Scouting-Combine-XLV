@@ -22,6 +22,7 @@ pub struct GameState {
     pub shadows_on: bool,
     pub graphics_high: bool, 
     pub maze_size: f32,
+    pub is_latest: bool,
     pub touchdown_on_leftside: bool,
     pub attached_enemies: usize,
     pub title_screen_cooldown: f32,
@@ -32,12 +33,13 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn initialize(graphics: bool, shadows_on: bool) -> Self {
+    pub fn initialize(graphics: bool, shadows_on: bool, game_version: bool) -> Self {
         GameState {
             score: 0,
             shadows_on: shadows_on, 
             graphics_high: graphics, 
             attached_enemies: 0, 
+            is_latest: game_version, 
             maze_size: 80.0,
             touchdown_on_leftside: false,
             corn_spawned: false,
@@ -57,6 +59,7 @@ impl Default for GameState {
             graphics_high: true, 
             attached_enemies: 0, 
             enemies_spawned: false,
+            is_latest: true,
             maze_size: 80.0,
             corn_spawned: false,
             title_screen_cooldown: 1.0,

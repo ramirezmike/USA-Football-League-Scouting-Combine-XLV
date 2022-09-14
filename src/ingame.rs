@@ -402,7 +402,7 @@ pub fn setup(
 
                     ..default()
                 })
-                .insert(combine::Combine::default())
+                .insert(combine::Combine::create(game_state.is_latest))
                 .insert(AnimationLink {
                     entity: None
                 })

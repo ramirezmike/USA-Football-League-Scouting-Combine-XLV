@@ -17,8 +17,7 @@ impl Plugin for CutscenePlugin {
            .with_system(display_textbox)
            .with_system(handle_input)
            .with_system(move_camera)
-           .with_system(game_camera::pan_orbit_camera)
-
+//           .with_system(game_camera::pan_orbit_camera)
         )
         .add_system_set(SystemSet::on_update(AppState::InGame)
             .with_system(handle_cutscene_event)

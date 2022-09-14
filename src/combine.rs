@@ -47,12 +47,12 @@ pub struct Combine {
     pub friction: f32,
 }
 
-impl Default for Combine {
-    fn default() -> Self {
+impl Combine {
+    pub fn create(latest: bool) -> Self {
         Combine {
             animation_set: false,
             velocity: Vec3::default(),
-            speed: 30.0,
+            speed: if latest { 45.0 } else { 30.0 },
             current_rotation_time: 0.0,
             heading: Heading::Left,
             target_rotation: Quat::from_rotation_y(TAU * 0.25),

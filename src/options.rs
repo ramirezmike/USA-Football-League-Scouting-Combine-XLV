@@ -56,6 +56,7 @@ enum OptionChange {
 pub struct OptionState {
     graphics: usize,
     shadows_on: usize,
+    game_version: usize,
 }
 
 impl OptionState {
@@ -63,6 +64,7 @@ impl OptionState {
         OptionState {
             graphics: 0,
             shadows_on: 0,
+            game_version: 0,
         }
     }
 }
@@ -249,6 +251,63 @@ fn setup(
             parent
                 .spawn_bundle(NodeBundle {
                     style: Style {
+                        size: Size::new(Val::Percent(100.0), Val::Percent(15.0)),
+                        position_type: PositionType::Relative,
+                        align_items: AlignItems::FlexEnd,
+                        ..Default::default()
+                    },
+                    color: Color::NONE.into(),
+                    ..Default::default()
+                })
+                .insert(OptionRow { row: 2 })
+                .with_children(|parent| {
+                    parent
+                        .spawn_bundle(NodeBundle {
+                            style: Style {
+                                size: Size::new(Val::Percent(50.0), Val::Percent(100.0)),
+                                position_type: PositionType::Relative,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::FlexEnd,
+                                ..Default::default()
+                            },
+                            color: Color::NONE.into(),
+                            ..Default::default()
+                        })
+                        .with_children(|parent| {
+                            add_label(
+                                parent,
+                                game_assets.font.clone(),
+                                text_scaler.scale(menus::DEFAULT_FONT_SIZE),
+                                "Version    :",
+                                vec![OptionRow { row: 2 }],
+                            );
+                        });
+
+                    parent
+                        .spawn_bundle(NodeBundle {
+                            style: Style {
+                                size: Size::new(Val::Percent(50.0), Val::Percent(100.0)),
+                                position_type: PositionType::Relative,
+                                justify_content: JustifyContent::Center,
+                                align_items: AlignItems::FlexEnd,
+                                ..Default::default()
+                            },
+                            color: Color::NONE.into(),
+                            ..Default::default()
+                        })
+                        .with_children(|parent| {
+                            add_option(
+                                parent,
+                                game_assets.font.clone(),
+                                text_scaler.scale(menus::SCORE_FONT_SIZE),
+                                vec![OptionRow { row: 2 }],
+                            );
+                        });
+                });
+
+            parent
+                .spawn_bundle(NodeBundle {
+                    style: Style {
                         size: Size::new(Val::Percent(40.0), Val::Percent(20.0)),
                         position_type: PositionType::Relative,
                         margin: UiRect {
@@ -264,14 +323,14 @@ fn setup(
                     color: Color::NONE.into(),
                     ..Default::default()
                 })
-                .insert(OptionRow { row: 2 })
+                .insert(OptionRow { row: 3 })
                 .with_children(|parent| {
                     add_button(
                         parent,
                         game_assets.font.clone(),
                         text_scaler.scale(menus::SCORE_FONT_SIZE),
                         "Start Game",
-                        vec![OptionRow { row: 2 }],
+                        vec![OptionRow { row: 3 }],
                     );
                 });
         });
@@ -515,7 +574,7 @@ fn update_menu_buttons(
     mut option_change_event_writer: EventWriter<OptionChangeEvent>,
 ) {
     let action_state = action_state.single();
-    let max_options = 2;
+    let max_options = 3;
 
     if action_state.just_pressed(MenuAction::Up) {
         audio.play_sfx(&game_assets.blip);
@@ -626,8 +685,25 @@ fn handle_option_changes(
                 };
             },
             2 => {
+                let min = 0;
+                let max = 1;
+                match option_change.action {
+                    OptionChange::Increase => {
+                        options.game_version = if options.game_version == max { min } 
+                                           else { max };
+                        audio.play_sfx(&game_assets.blip);
+                    }
+                    OptionChange::Decrease => {
+                        options.game_version = if options.game_version == max { min } 
+                                           else { max };
+                        audio.play_sfx(&game_assets.blip);
+                    }
+                    _ => (),
+                };
+            },
+            3 => {
                 if let OptionChange::Select = option_change.action {
-                    *game_state = game_state::GameState::initialize(options.graphics == 0, options.shadows_on == 0);
+                    *game_state = game_state::GameState::initialize(options.graphics == 0, options.shadows_on == 0, options.game_version == 0);
 
                     audio.play_sfx(&game_assets.blip);
                     assets_handler.load(AppState::InGame, &mut game_assets, &mut game_state);
@@ -645,15 +721,22 @@ fn display_current_options(
     for (mut option_text, option_row) in options.iter_mut() {
         if option_row.row == 0 {
             option_text.sections[0].value = match option_state.graphics {
-                0 => "High".to_string(),
-                _ => "Low ".to_string(),
+                0 => " High ".to_string(),
+                _ => " Low  ".to_string(),
             };
         }
 
         if option_row.row == 1 {
             option_text.sections[0].value = match option_state.shadows_on {
-                0 => "On ".to_string(),
-                _ => "Off".to_string(),
+                0 => "  On  ".to_string(),
+                _ => "  Off ".to_string(),
+            };
+        }
+
+        if option_row.row == 2 {
+            option_text.sections[0].value = match option_state.game_version {
+                0 => "Latest".to_string(),
+                _ => " Jam  ".to_string(),
             };
         }
     }
