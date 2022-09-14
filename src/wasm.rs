@@ -4,7 +4,7 @@ pub struct WasmPlugin;
 impl Plugin for WasmPlugin {
     fn build(&self, _app: &mut App) {
         #[cfg(target_arch = "wasm32")]
-        _app.add_system(fullscreen);
+        _app.add_startup_system(fullscreen);
     }
 }
 
