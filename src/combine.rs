@@ -52,7 +52,7 @@ impl Combine {
         Combine {
             animation_set: false,
             velocity: Vec3::default(),
-            speed: if latest { 45.0 } else { 30.0 },
+            speed: if latest { 40.0 } else { 30.0 },
             current_rotation_time: 0.0,
             heading: Heading::Left,
             target_rotation: Quat::from_rotation_y(TAU * 0.25),

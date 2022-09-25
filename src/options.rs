@@ -703,7 +703,7 @@ fn handle_option_changes(
             },
             3 => {
                 if let OptionChange::Select = option_change.action {
-                    *game_state = game_state::GameState::initialize(options.graphics == 0, options.shadows_on == 0, options.game_version == 0);
+                    *game_state = game_state::GameState::initialize(options.graphics == 0, options.shadows_on == 0, options.game_version != 0);
 
                     audio.play_sfx(&game_assets.blip);
                     assets_handler.load(AppState::InGame, &mut game_assets, &mut game_state);
@@ -735,8 +735,8 @@ fn display_current_options(
 
         if option_row.row == 2 {
             option_text.sections[0].value = match option_state.game_version {
-                0 => "Latest".to_string(),
-                _ => " Jam  ".to_string(),
+                0 => " Jam  ".to_string(),
+                _ => "Latest".to_string(),
             };
         }
     }
